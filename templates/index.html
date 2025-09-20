@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Matcher | Smart Job Matching Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-brain"></i>
+                <span>AI Resume Matcher</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <div class="nav-item">
+                    <a href="#home" class="nav-link active">Home</a>
+                </div>
+                <div class="nav-item dropdown">
+                    <a href="#features" class="nav-link">Features</a>
+                    <div class="dropdown-content">
+                        <a href="#ai-analysis">AI Analysis</a>
+                        <a href="#job-matching">Job Matching</a>
+                        <a href="#insights">Career Insights</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </div>
+                <div class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </div>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Find Your Perfect Job Match with 
+                            <span class="gradient-text">AI Intelligence</span>
+                        </h1>
+                        <p class="hero-description">
+                            Upload your resume and let our advanced AI analyze your skills, 
+                            experience, and qualifications to find the most compatible job opportunities.
+                        </p>
+                    </div>
+                    <div class="hero-upload">
+                        <div class="upload-card">
+                            <div class="upload-header">
+                                <h3>Get Started</h3>
+                                <p>Upload your resume to begin</p>
+                            </div>
+                            <div class="upload-area" id="upload-area">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <p class="upload-title">Drop your resume here</p>
+                                    <p class="upload-subtitle">or <span class="upload-browse">browse files</span></p>
+                                    <p class="upload-formats">PDF, DOCX, or Image files</p>
+                                </div>
+                                <input type="file" id="resume-file" accept=".pdf,.docx,.jpg,.jpeg,.png,.tiff,.bmp" style="display: none;">
+                            </div>
+                            <button class="upload-btn" id="upload-btn" disabled>
+                                <i class="fas fa-rocket"></i>
+                                Analyze Resume
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section id="progress-section" class="progress-section hidden">
+            <div class="container">
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <h3 id="progress-title">Processing Your Resume</h3>
+                        <p id="progress-description">Please wait while we analyze your resume and find matching jobs...</p>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="step" id="step-upload">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Upload</span>
+                        </div>
+                        <div class="step" id="step-analyze">
+                            <i class="fas fa-brain"></i>
+                            <span>Analyze</span>
+                        </div>
+                        <div class="step" id="step-search">
+                            <i class="fas fa-search"></i>
+                            <span>Search Jobs</span>
+                        </div>
+                        <div class="step" id="step-match">
+                            <i class="fas fa-bullseye"></i>
+                            <span>Match</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Job Search Section -->
+        <section id="job-search-section" class="job-search-section hidden">
+            <div class="container">
+                <div class="search-card">
+                    <div class="search-header">
+                        <h3>Customize Your Job Search</h3>
+                        <p>Fine-tune your search parameters for better matches</p>
+                    </div>
+                    <div class="search-form">
+                        <div class="form-group">
+                            <label for="job-query">Job Role/Keywords</label>
+                            <input type="text" id="job-query" placeholder="e.g., AI Engineer, Data Scientist" value="AI Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" placeholder="e.g., India, Remote" value="India">
+                        </div>
+                        <button class="search-btn" id="search-btn">
+                            <i class="fas fa-search"></i>
+                            Find Matching Jobs
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="results-section hidden">
+            <div class="container">
+                <div class="results-header">
+                    <h2>Your Job Matches</h2>
+                    <p>Based on your resume analysis, here are the top opportunities for you</p>
+                </div>
+                <div class="results-filters">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="all">All Jobs</button>
+                        <button class="filter-btn" data-filter="high">High Match (80%+)</button>
+                        <button class="filter-btn" data-filter="medium">Medium Match (60-79%)</button>
+                        <button class="filter-btn" data-filter="low">Lower Match (<60%)</button>
+                    </div>
+                    <div class="sort-group">
+                        <select id="sort-select">
+                            <option value="score">Sort by Match Score</option>
+                            <option value="date">Sort by Date</option>
+                            <option value="company">Sort by Company</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="results-grid" id="results-grid">
+                    <!-- Job cards will be populated here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal hidden" id="success-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h3>Success!</h3>
+            </div>
+            <div class="modal-body">
+                <p id="success-message">Resume uploaded successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="close-success">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal hidden" id="error-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-triangle error-icon"></i>
+                <h3>Error</h3>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">An error occurred. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="close-error">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
