@@ -1,9 +1,6 @@
 import google.generativeai as genai
 import docx2txt
 import pdfplumber
-import pytesseract
-from PIL import Image
-import fitz  # PyMuPDF
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -16,6 +13,16 @@ import re
 from datetime import datetime, timedelta
 import random
 from dotenv import load_dotenv
+
+# Optional OCR dependencies (for local development)
+try:
+    import pytesseract
+    from PIL import Image
+    import fitz  # PyMuPDF
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
+    print("OCR libraries not available. Image processing will be limited.")
 
 # Load environment variables
 load_dotenv()
@@ -56,8 +63,8 @@ def extract_text(file_path: str) -> str:
         except:
             text = ""
             
-        # Try OCR if text extraction failed
-        if not text.strip():
+        # Try OCR if text extraction failed and OCR is available
+        if not text.strip() and OCR_AVAILABLE:
             try:
                 doc = fitz.open(file_path)
                 for page_num in range(len(doc)):
@@ -66,15 +73,20 @@ def extract_text(file_path: str) -> str:
                     text += pytesseract.image_to_string(img)
             except Exception as e:
                 print(f"Error processing PDF with OCR: {e}")
+        elif not text.strip():
+            print("No text extracted from PDF and OCR not available.")
             
     elif ext in [".jpg", ".jpeg", ".png", ".tiff", ".bmp"]:
-        try:
-            img = Image.open(file_path)
-            text = pytesseract.image_to_string(img)
-        except Exception as e:
-            print(f"Error processing image: {e}")
-            text = ""
-            print(f"Error processing image: {e}")
+        if OCR_AVAILABLE:
+            try:
+                img = Image.open(file_path)
+                text = pytesseract.image_to_string(img)
+            except Exception as e:
+                print(f"Error processing image: {e}")
+                text = ""
+        else:
+            print("Image processing not available without OCR libraries.")
+            text = "Image text extraction not available in this environment."
     else:
         raise ValueError(f"Unsupported file format: {ext}")
 
