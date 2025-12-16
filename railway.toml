@@ -12,7 +12,7 @@ startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
 
 # Health check endpoint
 healthcheckPath = "/health"
-healthcheckTimeout = 100
+healthcheckTimeout = 200
 
 # Restart policy
 restartPolicyType = "ON_FAILURE"

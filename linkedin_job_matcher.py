@@ -27,10 +27,10 @@ except ImportError:
 # Load environment variables
 load_dotenv()
 
-# Configure API key from environment variable
+# Configure API key from environment variable (optional since LLM is disabled)
 api_key = os.getenv('GOOGLE_AI_API_KEY')
 if not api_key:
-    raise ValueError("GOOGLE_AI_API_KEY environment variable is required. Please check your .env file.")
+    print("Warning: GOOGLE_AI_API_KEY not set. LLM features are disabled - using structured extraction only.")
 
 # Toggle for using real external feeds (Indeed/CareerJet scraping)
 USE_EXTERNAL_FEEDS = os.getenv("USE_EXTERNAL_FEEDS", "false").lower() == "true"
