@@ -1,115 +1,99 @@
-# LinkedIn Job Matcher - Vercel Deployment Guide
+# 🚀 Deployment Guide - LinkedIn Job Matcher
 
-## Prerequisites
+## Recommended Platform: Railway 🚂
 
-1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-2. **Google API Key**: Get your API key from [Google AI Studio](https://aistudio.google.com/)
-3. **Git Repository**: Your code should be in a Git repository (GitHub, GitLab, or Bitbucket)
+**Railway is the best choice** for this Flask application because it:
+- ✅ Supports background threading (your job matching requires this)
+- ✅ Provides persistent file storage (for resume uploads)
+- ✅ Offers generous free tier (500 hours/month, $5 credit)
+- ✅ Auto-detects Python/Flask (zero configuration)
+- ✅ Simple setup (5 minutes to deploy)
 
-## Deployment Steps
+---
 
-### Step 1: Prepare Environment Variables
+## 📖 Quick Start
 
-1. In your Vercel dashboard, go to your project settings
-2. Navigate to "Environment Variables"
-3. Add the following variables:
-   - `GOOGLE_API_KEY`: Your Google Generative AI API key
-   - `FLASK_SECRET_KEY`: A secure random string for Flask sessions
+See the complete guide: **[RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)**
 
-### Step 2: Deploy with Vercel CLI
+### TL;DR - Deploy to Railway in 5 Minutes:
 
-1. **Login to Vercel**:
-   ```bash
-   npx vercel login
-   ```
+1. **Sign up**: [railway.app](https://railway.app) → Sign in with GitHub
+2. **Create project**: New Project → Deploy from GitHub repo → Select your repo
+3. **Add environment variables**:
+   - `FLASK_SECRET_KEY` (generate with: `python3 -c "import secrets; print(secrets.token_hex(32))"`)
+   - `GOOGLE_AI_API_KEY` (from [Google AI Studio](https://aistudio.google.com/))
+   - `USE_EXTERNAL_FEEDS=true` (optional)
+4. **Set start command**: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120`
+5. **Deploy**: Railway auto-deploys on git push! 🎉
 
-2. **Navigate to your project directory**:
-   ```bash
-   cd /Users/a91788/Desktop/FYP
-   ```
+Your app will be live at: `https://your-app.railway.app`
 
-3. **Deploy to Vercel**:
-   ```bash
-   npx vercel
-   ```
-   
-   Follow the prompts:
-   - Link to existing project? **N** (for first deployment)
-   - What's your project's name? **linkedin-job-matcher** (or your preferred name)
-   - In which directory is your code located? **./** (current directory)
-   - Want to override the settings? **N** (use vercel.json settings)
+---
 
-4. **Deploy to production**:
-   ```bash
-   npx vercel --prod
-   ```
+## 🔄 Platform Comparison
 
-### Step 3: Alternative - Deploy from Git
+For a detailed comparison of all platforms, see: **[DEPLOYMENT_COMPARISON.md](./DEPLOYMENT_COMPARISON.md)**
 
-1. **Push your code to GitHub** (if not already done)
-2. **Connect repository in Vercel dashboard**:
-   - Go to [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import your GitHub repository
-   - Add environment variables in project settings
-   - Deploy
+### Quick Comparison
 
-## Important Notes
+| Platform | Suitability | Background Threading | Free Tier | Setup Time |
+|----------|-------------|---------------------|-----------|------------|
+| **Railway** ⭐ | ⭐⭐⭐⭐⭐ | ✅ Yes | 500 hrs/month | 5 min |
+| **Render** | ⭐⭐⭐⭐ | ✅ Yes | 750 hrs/month | 10 min |
+| **Fly.io** | ⭐⭐⭐⭐ | ✅ Yes | Limited | 15 min |
+| **Vercel** ❌ | ⭐ | ❌ No | Yes | N/A (requires refactor) |
 
-### File Uploads in Serverless Environment
-- Files are uploaded to `/tmp/uploads` in the serverless environment
-- Files are temporary and will be cleaned up after function execution
-- For production, consider using cloud storage (AWS S3, Google Cloud Storage)
+---
 
-### API Limitations
-- Vercel has execution time limits (10s for Hobby, 60s for Pro)
-- Large file processing might timeout
-- Consider implementing async processing for production
+## 📚 Detailed Guides
 
-### Environment Variables Required
-```
-GOOGLE_API_KEY=your_google_api_key_here
-FLASK_SECRET_KEY=your_secret_key_here
-```
+- **[RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)** - Complete Railway deployment guide
+- **[DEPLOYMENT_COMPARISON.md](./DEPLOYMENT_COMPARISON.md)** - Platform comparison and alternatives
 
-## Troubleshooting
+---
 
-### Common Issues
+## 🔧 Environment Variables
 
-1. **Import Errors**: Make sure all dependencies are in `requirements.txt`
-2. **File Path Issues**: Use absolute paths or relative to project root
-3. **Timeout Issues**: Optimize processing or use background jobs
-4. **Memory Issues**: Vercel has memory limits (512MB Hobby, 3GB Pro)
-
-### Local Testing Before Deployment
+All platforms require these environment variables:
 
 ```bash
-# Activate virtual environment
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export GOOGLE_API_KEY="your_api_key"
-export FLASK_SECRET_KEY="your_secret_key"
-
-# Run locally
-python app.py
+FLASK_SECRET_KEY=your-secret-key-here        # Generate: python3 -c "import secrets; print(secrets.token_hex(32))"
+GOOGLE_AI_API_KEY=your-google-api-key        # From Google AI Studio
+USE_EXTERNAL_FEEDS=true                      # Optional: Enable external job feeds
+PORT=8000                                     # Usually auto-set by platform
 ```
 
-## Production Optimizations
+---
 
-1. **Add error handling for file size limits**
-2. **Implement file cleanup in `/tmp`**
-3. **Add request rate limiting**
-4. **Use CDN for static assets**
-5. **Implement proper logging**
-6. **Add health check endpoints**
+## ✅ Pre-Deployment Checklist
 
-## Support
+- [ ] Code is pushed to GitHub
+- [ ] `requirements.txt` includes all dependencies
+- [ ] Environment variables ready
+- [ ] Health check endpoint works (`/health`)
+- [ ] Start command uses `$PORT` (not hardcoded)
+- [ ] App runs locally with `gunicorn`
 
-For deployment issues:
-- Check [Vercel documentation](https://vercel.com/docs)
-- Review function logs in Vercel dashboard
-- Test locally before deploying
+---
+
+## 🆘 Need Help?
+
+- **Railway**: [docs.railway.app](https://docs.railway.app) | [Discord](https://discord.gg/railway)
+- **Render**: [render.com/docs](https://render.com/docs)
+- **Fly.io**: [fly.io/docs](https://fly.io/docs)
+
+---
+
+## 📝 Legacy: Vercel Deployment (Not Recommended)
+
+⚠️ **Vercel is NOT recommended** for this app because:
+- ❌ No background threading support (your app needs this)
+- ❌ Strict timeout limits (10-60s)
+- ❌ No persistent file storage
+- ❌ Would require major refactoring
+
+If you still want Vercel deployment instructions, they were moved to a separate file. However, **Railway is strongly recommended** for this application.
+
+---
+
+**Ready to deploy?** Follow the **[Railway Deployment Guide](./RAILWAY_DEPLOYMENT.md)** 🚀
