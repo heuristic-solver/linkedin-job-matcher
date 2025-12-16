@@ -537,7 +537,7 @@ def get_linkedin_jobs_simulation(query: str, location: str = "India") -> list[di
                     # For LinkedIn, we can't easily get full descriptions without authentication
                     # Use deterministic generator for first few jobs
                     if len(jobs) < 3:  # Only for first 3 LinkedIn jobs
-                        description = generate_linkedin_job_description(title, company, query)
+                    description = generate_linkedin_job_description(title, company, query)
                     else:
                         description = f"{title} position at {company}. This role involves working with {query} technologies and requires relevant experience and skills in the field."
                     
@@ -720,7 +720,7 @@ def is_relevant_job(title: str, description: str, query: str) -> bool:
 
 def generate_relevant_job_suggestions(query: str, location: str) -> list[dict]:
     """Generate deterministic suggestions (non-LLM) when RSS fails."""
-    return generate_fallback_jobs(query, location)
+        return generate_fallback_jobs(query, location)
 
 def generate_fallback_jobs(query: str, location: str) -> list[dict]:
     """Generate fallback job listings with verified search URLs"""
@@ -1013,6 +1013,7 @@ def _calculate_job_match(job: Dict, resume_skills: List[str], years_exp: float, 
                 if skill_matched:
                     matched_skills.append(keyword.title())
             else:
+                    # Skill is required by job but candidate doesn't have it
                     missing_skills.append(keyword.title())
     
     # Also check for role-specific requirements
