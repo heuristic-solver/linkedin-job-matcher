@@ -119,6 +119,22 @@
             </div>
         </section>
 
+        <!-- Resume Analytics Section -->
+        <section id="analytics-section" class="analytics-section hidden">
+            <div class="container">
+                <div class="analytics-header">
+                    <h2>Resume Analytics Dashboard</h2>
+                    <p>Comprehensive analysis of your resume strength and key metrics</p>
+                    <button class="search-btn btn-secondary" id="ats-check-btn" style="margin-top: 1rem; width: 220px;">
+                        <i class="fas fa-clipboard-check"></i> Check ATS Score
+                    </button>
+                </div>
+                <div class="analytics-grid" id="analytics-grid">
+                    <!-- Analytics cards will be populated here -->
+                </div>
+            </div>
+        </section>
+
         <!-- Job Search Section -->
         <section id="job-search-section" class="job-search-section hidden">
             <div class="container">
@@ -128,19 +144,59 @@
                         <p>Fine-tune your search parameters for better matches</p>
                     </div>
                     <div class="search-form">
-                        <div class="form-group">
-                            <label for="job-query">Job Role/Keywords</label>
-                            <input type="text" id="job-query" placeholder="e.g., AI Engineer, Data Scientist" value="AI Engineer">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="job-query">Job Role/Keywords</label>
+                                <input type="text" id="job-query" placeholder="e.g., AI Engineer, Data Scientist" value="AI Engineer">
+                            </div>
+                            <div class="form-group">
+                                <label for="location">Location</label>
+                                <input type="text" id="location" placeholder="e.g., India, Remote" value="India">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="location">Location</label>
-                            <input type="text" id="location" placeholder="e.g., India, Remote" value="India">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="job-type">Job Type</label>
+                                <select id="job-type">
+                                    <option value="all">All Types</option>
+                                    <option value="full-time">Full-time</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="contract">Contract</option>
+                                    <option value="remote">Remote</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="experience-level">Experience Level</label>
+                                <select id="experience-level">
+                                    <option value="all">All Levels</option>
+                                    <option value="entry">Entry Level</option>
+                                    <option value="mid">Mid Level</option>
+                                    <option value="senior">Senior Level</option>
+                                </select>
+                            </div>
                         </div>
                         <button class="search-btn" id="search-btn">
                             <i class="fas fa-search"></i>
                             Find Matching Jobs
                         </button>
+                        <button class="search-btn btn-secondary" id="advanced-search-btn" style="margin-top: 1rem;">
+                            <i class="fas fa-chart-line"></i>
+                            View Market Intelligence
+                        </button>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Intelligence Section -->
+        <section id="market-intel-section" class="market-intel-section hidden">
+            <div class="container">
+                <div class="intel-header">
+                    <h2>Market Intelligence</h2>
+                    <p>Real-time insights about the job market</p>
+                </div>
+                <div class="intel-grid" id="intel-grid">
+                    <!-- Market intelligence cards will be populated here -->
                 </div>
             </div>
         </section>
@@ -160,6 +216,16 @@
                         <button class="filter-btn" data-filter="low">Lower Match (<60%)</button>
                     </div>
                     <div class="sort-group">
+                        <select id="platform-select" style="margin-right: 0.5rem;">
+                            <option value="all">All Platforms</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="ATS">ATS</option>
+                            <option value="Indeed">Indeed</option>
+                            <option value="Naukri">Naukri</option>
+                            <option value="Glassdoor">Glassdoor</option>
+                            <option value="Monster">Monster</option>
+                            <option value="ZipRecruiter">ZipRecruiter</option>
+                        </select>
                         <select id="sort-select">
                             <option value="score">Sort by Match Score</option>
                             <option value="date">Sort by Date</option>

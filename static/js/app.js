@@ -12,12 +12,21 @@ const elements = {
     progressFill: document.getElementById('progress-fill'),
     progressTitle: document.getElementById('progress-title'),
     progressDescription: document.getElementById('progress-description'),
+    analyticsSection: document.getElementById('analytics-section'),
+    analyticsGrid: document.getElementById('analytics-grid'),
     jobSearchSection: document.getElementById('job-search-section'),
+    marketIntelSection: document.getElementById('market-intel-section'),
+    intelGrid: document.getElementById('intel-grid'),
     resultsSection: document.getElementById('results-section'),
     resultsGrid: document.getElementById('results-grid'),
     jobQuery: document.getElementById('job-query'),
     location: document.getElementById('location'),
+    jobType: document.getElementById('job-type'),
+    experienceLevel: document.getElementById('experience-level'),
     searchBtn: document.getElementById('search-btn'),
+    advancedSearchBtn: document.getElementById('advanced-search-btn'),
+    atsCheckBtn: document.getElementById('ats-check-btn'),
+    platformSelect: document.getElementById('platform-select'),
     loadingOverlay: document.getElementById('loading-overlay'),
     successModal: document.getElementById('success-modal'),
     errorModal: document.getElementById('error-modal'),
@@ -48,8 +57,41 @@ function initializeEventListeners() {
     elements.resumeFile.addEventListener('change', handleFileSelect);
     elements.uploadBtn.addEventListener('click', handleResumeUpload);
 
-    // Search events
-    elements.searchBtn.addEventListener('click', handleJobSearch);
+    // Search events - ensure elements exist before adding listeners
+    if (elements.searchBtn) {
+        elements.searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Find Matching Jobs button clicked');
+            handleJobSearch();
+        });
+    } else {
+        console.error('Search button not found!');
+        // Try to find it again after a delay
+        setTimeout(() => {
+            const searchBtn = document.getElementById('search-btn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', handleJobSearch);
+                console.log('Search button found and listener attached');
+            }
+        }, 1000);
+    }
+    
+    if (elements.advancedSearchBtn) {
+        elements.advancedSearchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleMarketIntelligence();
+        });
+    }
+
+    if (elements.atsCheckBtn) {
+        elements.atsCheckBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            await handleAtsCheck();
+        });
+    }
 
     // Modal events
     elements.closeSuccess.addEventListener('click', () => hideModal('success-modal'));
@@ -62,6 +104,8 @@ function initializeEventListeners() {
 
     // Sort events
     document.getElementById('sort-select')?.addEventListener('change', handleSortChange);
+    // Platform filter
+    elements.platformSelect?.addEventListener('change', () => filterJobs(currentScoreFilter));
 
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -210,6 +254,11 @@ async function startResumeAnalysis() {
             currentResumeData = data.resume_data;
             updateProgressStep('complete', 100, 'Resume analysis complete!');
             
+            // Fetch analytics
+            setTimeout(() => {
+                fetchResumeAnalytics(data.resume_data);
+            }, 500);
+            
             setTimeout(() => {
                 showJobSearchSection();
             }, 1500);
@@ -222,25 +271,63 @@ async function startResumeAnalysis() {
 }
 
 async function handleJobSearch() {
+    console.log('Job search button clicked');
+    console.log('Session ID:', currentSessionId);
+    console.log('Resume Data:', currentResumeData ? 'Present' : 'Missing');
+    
+    // Check if resume has been uploaded and analyzed
     if (!currentSessionId || !currentResumeData) {
-        showError('Please upload and analyze your resume first.');
+        showError('Please upload and analyze your resume first. Click "Upload" above to get started.');
+        // Scroll to upload section
+        document.querySelector('.hero-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
-    const jobQuery = elements.jobQuery.value.trim();
-    const location = elements.location.value.trim();
+    const jobQuery = elements.jobQuery?.value?.trim() || '';
+    const location = elements.location?.value?.trim() || 'India';
+    const jobType = elements.jobType?.value || 'all';
+    const experienceLevel = elements.experienceLevel?.value || 'all';
 
     if (!jobQuery) {
-        showError('Please enter a job query.');
+        showError('Please enter a job query (e.g., "AI Engineer", "Data Scientist").');
+        elements.jobQuery?.focus();
         return;
     }
 
-    // Show progress section again
+    console.log('Starting job search:', { jobQuery, location, jobType, experienceLevel });
+
+    // Immediately show loading state on button
+    const searchButton = elements.searchBtn;
+    if (searchButton) {
+        const originalText = searchButton.innerHTML;
+        searchButton.disabled = true;
+        searchButton.style.opacity = '0.7';
+        searchButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+        
+        // Store original content to restore later
+        searchButton.dataset.originalHtml = originalText;
+    }
+
+    // Show progress section immediately and scroll to it
     showProgressSection();
-    updateProgressStep('searching', 20, 'Searching for matching jobs...');
+    updateProgressStep('searching', 10, 'Initializing job search...');
+    
+    // Scroll to progress section for better visibility
+    setTimeout(() => {
+        elements.progressSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 
     try {
-        const response = await fetch('/search-jobs', {
+        console.log('Sending job search request...', {
+            session_id: currentSessionId,
+            job_query: jobQuery,
+            location: location,
+            job_type: jobType,
+            experience_level: experienceLevel,
+            has_resume_data: !!currentResumeData
+        });
+
+        const response = await fetch('/search-jobs-advanced', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -249,43 +336,344 @@ async function handleJobSearch() {
                 session_id: currentSessionId,
                 job_query: jobQuery,
                 location: location,
+                job_type: jobType,
+                experience_level: experienceLevel,
                 resume_data: currentResumeData
             })
         });
 
+        console.log('Response status:', response.status, response.statusText);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            throw new Error(`Server error: ${response.status} ${response.statusText}. ${errorText}`);
+        }
+
         const data = await response.json();
+        console.log('Job search response:', data);
 
         if (data.success) {
+            console.log('Job search started successfully, starting progress polling...');
+            // Clear any existing interval
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
             // Start polling for progress
             startProgressPolling();
         } else {
-            updateProgressStep('error', 0, data.error || 'Job search failed.');
+            const errorMsg = data.error || 'Job search failed. Please try again.';
+            console.error('Job search failed:', errorMsg);
+            updateProgressStep('error', 0, errorMsg);
+            showError(errorMsg);
+            restoreSearchButton();
         }
     } catch (error) {
-        updateProgressStep('error', 0, 'Network error during job search.');
+        console.error('Job search error:', error);
+        console.error('Error stack:', error.stack);
+        const errorMsg = `Network error: ${error.message}. Please check your connection and try again.`;
+        updateProgressStep('error', 0, errorMsg);
+        showError(errorMsg);
+        restoreSearchButton();
     }
 }
 
+function restoreSearchButton() {
+    const searchButton = elements.searchBtn;
+    if (searchButton && searchButton.dataset.originalHtml) {
+        searchButton.disabled = false;
+        searchButton.style.opacity = '1';
+        searchButton.innerHTML = searchButton.dataset.originalHtml;
+        delete searchButton.dataset.originalHtml;
+    }
+}
+
+async function fetchResumeAnalytics(resumeData) {
+    try {
+        const response = await fetch(`/analytics/${currentSessionId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                resume_data: resumeData
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            displayAnalytics(data.analytics);
+        }
+    } catch (error) {
+        console.error('Error fetching analytics:', error);
+    }
+}
+
+function displayAnalytics(analytics) {
+    if (!elements.analyticsSection || !elements.analyticsGrid) return;
+    
+    elements.analyticsSection.classList.remove('hidden');
+    elements.analyticsGrid.innerHTML = '';
+    
+    const strength = analytics.strength_analysis;
+    const metrics = analytics.key_metrics;
+    
+    // Overall Score Card
+    const overallCard = createAnalyticsCard(
+        'Overall Resume Score',
+        `${strength.scores.overall}/100`,
+        getScoreColor(strength.scores.overall),
+        [
+            `Skills: ${strength.scores.skills}/100`,
+            `Experience: ${strength.scores.experience}/100`,
+            `Education: ${strength.scores.education}/100`,
+            `Summary: ${strength.scores.summary}/100`
+        ]
+    );
+    elements.analyticsGrid.appendChild(overallCard);
+    
+    // Key Metrics Card
+    const metricsCard = createAnalyticsCard(
+        'Key Metrics',
+        '',
+        'primary',
+        [
+            `Total Skills: ${metrics.total_skills}`,
+            `Years Experience: ~${metrics.years_experience}`,
+            `Education Level: ${metrics.education_level}`,
+            `Programming Languages: ${metrics.programming_languages}`
+        ]
+    );
+    elements.analyticsGrid.appendChild(metricsCard);
+    
+    // Strengths Card
+    if (strength.insights.strengths.length > 0) {
+        const strengthsCard = createAnalyticsCard(
+            'Strengths',
+            `${strength.insights.strengths.length} identified`,
+            'success',
+            strength.insights.strengths
+        );
+        elements.analyticsGrid.appendChild(strengthsCard);
+    }
+    
+    // Recommendations card removed per request
+
+    // ATS Score card (if available from prior fetch)
+    if (analytics.ats_score_card) {
+        renderAtsCard(analytics.ats_score_card);
+    }
+}
+
+function createAnalyticsCard(title, value, colorClass, items) {
+    const card = document.createElement('div');
+    card.className = 'analytics-card';
+    card.innerHTML = `
+        <div class="analytics-card-header">
+            <h3>${escapeHtml(title)}</h3>
+            ${value ? `<div class="analytics-value ${colorClass}">${escapeHtml(value)}</div>` : ''}
+        </div>
+        <div class="analytics-card-body">
+            <ul>
+                ${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    return card;
+}
+
+function getScoreColor(score) {
+    if (score >= 80) return 'success';
+    if (score >= 60) return 'warning';
+    return 'error';
+}
+
+async function handleMarketIntelligence() {
+    if (!elements.jobQuery || !elements.location) {
+        showError('Please enter job query and location first.');
+        return;
+    }
+    
+    const jobQuery = elements.jobQuery.value.trim();
+    const location = elements.location.value.trim();
+    const experienceLevel = elements.experienceLevel?.value || 'mid';
+    
+    if (!jobQuery) {
+        showError('Please enter a job query.');
+        return;
+    }
+    
+    showLoading('Fetching market intelligence...');
+    
+    try {
+        const skills = currentResumeData?.skills || [];
+        const skillsList = Array.isArray(skills) ? skills : (typeof skills === 'string' ? skills.split(',') : []);
+        
+        const response = await fetch('/market-intelligence', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                job_title: jobQuery,
+                location: location,
+                experience_level: experienceLevel,
+                skills: skillsList
+            })
+        });
+        
+        const data = await response.json();
+        hideLoading();
+        
+        if (data.success) {
+            displayMarketIntelligence(data.market_intelligence);
+        } else {
+            showError(data.error || 'Failed to fetch market intelligence.');
+        }
+    } catch (error) {
+        hideLoading();
+        showError('Network error fetching market intelligence.');
+    }
+}
+
+function displayMarketIntelligence(intel) {
+    if (!elements.marketIntelSection || !elements.intelGrid) return;
+    
+    elements.marketIntelSection.classList.remove('hidden');
+    elements.intelGrid.innerHTML = '';
+    
+    // Salary Insights
+    if (intel.salary_insights) {
+        const salary = intel.salary_insights.salary_range;
+        const salaryCard = createIntelCard(
+            'Salary Insights',
+            `$${salary.min.toLocaleString()} - $${salary.max.toLocaleString()}`,
+            'primary',
+            intel.salary_insights.insights
+        );
+        elements.intelGrid.appendChild(salaryCard);
+    }
+    
+    // Market Demand
+    if (intel.demand_trends) {
+        const demand = intel.demand_trends;
+        const demandCard = createIntelCard(
+            'Market Demand',
+            `${demand.demand_score}/100 - ${demand.trend}`,
+            demand.demand_score >= 80 ? 'success' : 'warning',
+            [...demand.market_insights, ...demand.recommendations]
+        );
+        elements.intelGrid.appendChild(demandCard);
+    }
+    
+    // Competition Analysis
+    if (intel.competition) {
+        const comp = intel.competition;
+        const compCard = createIntelCard(
+            'Competition Level',
+            comp.competition_level.replace('_', ' ').toUpperCase(),
+            comp.competition_level.includes('high') ? 'warning' : 'primary',
+            [...comp.insights, ...comp.tips]
+        );
+        elements.intelGrid.appendChild(compCard);
+    }
+    
+    // Industry Insights
+    if (intel.industry) {
+        const industry = intel.industry;
+        const industryCard = createIntelCard(
+            'Industry Insights',
+            industry.industry,
+            'primary',
+            [
+                `Growth Rate: ${industry.growth_rate}`,
+                `Outlook: ${industry.outlook}`,
+                ...industry.recommendations
+            ]
+        );
+        elements.intelGrid.appendChild(industryCard);
+    }
+    
+    elements.marketIntelSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function createIntelCard(title, subtitle, colorClass, items) {
+    const card = document.createElement('div');
+    card.className = 'intel-card';
+    card.innerHTML = `
+        <div class="intel-card-header">
+            <h3>${escapeHtml(title)}</h3>
+            <div class="intel-subtitle ${colorClass}">${escapeHtml(subtitle)}</div>
+        </div>
+        <div class="intel-card-body">
+            <ul>
+                ${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+    return card;
+}
+
 function startProgressPolling() {
+    console.log('Starting progress polling for session:', currentSessionId);
+    
+    // Clear any existing interval
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+    
+    let pollCount = 0;
+    const maxPolls = 150; // 5 minutes max (150 * 2 seconds)
+    
     progressInterval = setInterval(async () => {
+        pollCount++;
+        console.log(`Progress poll #${pollCount} for session: ${currentSessionId}`);
+        
         try {
             const response = await fetch(`/progress/${currentSessionId}`);
+            
+            if (!response.ok) {
+                throw new Error(`Progress fetch failed: ${response.status}`);
+            }
+            
             const progress = await response.json();
+            console.log('Progress update:', progress);
 
             updateProgressFromServer(progress);
 
             if (progress.step === 'complete' && progress.results) {
+                console.log('Job search complete! Displaying results...');
                 clearInterval(progressInterval);
+                progressInterval = null;
+                updateProgressStep('complete', 100, 'Job search complete! Displaying results...');
+                restoreSearchButton();
                 setTimeout(() => {
                     displayJobResults(progress.results);
                 }, 1000);
             } else if (progress.step === 'error') {
+                console.error('Job search error:', progress.message);
                 clearInterval(progressInterval);
+                progressInterval = null;
                 updateProgressStep('error', 0, progress.message);
+                showError(progress.message);
+                restoreSearchButton();
+            } else if (pollCount >= maxPolls) {
+                console.warn('Max polls reached, stopping polling');
+                clearInterval(progressInterval);
+                progressInterval = null;
+                updateProgressStep('error', 0, 'Job search is taking longer than expected. Please try again.');
+                restoreSearchButton();
             }
         } catch (error) {
-            clearInterval(progressInterval);
-            updateProgressStep('error', 0, 'Error fetching progress.');
+            console.error('Error fetching progress:', error);
+            if (pollCount >= 5) { // Only stop after 5 failed attempts
+                clearInterval(progressInterval);
+                progressInterval = null;
+                updateProgressStep('error', 0, 'Error fetching progress. Please refresh and try again.');
+                showError('Unable to fetch job search progress. Please try again.');
+                restoreSearchButton();
+            }
         }
     }, 2000);
 }
@@ -307,18 +695,21 @@ function updateProgressFromServer(progress) {
 function showProgressSection() {
     elements.progressSection.classList.remove('hidden');
     
-    // Only auto-scroll if the user is near the top of the page or the upload section
-    const scrollPosition = window.pageYOffset;
-    const heroHeight = document.querySelector('.hero-section')?.offsetHeight || 800;
-    
-    if (scrollPosition < heroHeight * 1.2) {
+    // Always scroll to progress section when showing it
+    setTimeout(() => {
         elements.progressSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    }, 50);
     
     // Reset all steps
     progressSteps.forEach(stepId => {
         document.getElementById(stepId)?.classList.remove('active', 'completed');
     });
+    
+    // Add a subtle pulse animation to draw attention
+    const progressCard = document.querySelector('.progress-card');
+    if (progressCard) {
+        progressCard.style.animation = 'pulse 2s ease-in-out infinite';
+    }
 }
 
 function showJobSearchSection() {
@@ -423,23 +814,87 @@ function renderJobCards(jobs) {
     });
 }
 
+// ===== ATS CHECKER =====
+async function handleAtsCheck() {
+    if (!currentSessionId || !currentResumeData) {
+        showError('Please upload and analyze your resume first.');
+        return;
+    }
+    showLoading('Calculating ATS score...');
+    try {
+        const response = await fetch(`/ats-score/${currentSessionId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume_data: currentResumeData })
+        });
+        const data = await response.json();
+        hideLoading();
+        if (!data.success) {
+            showError(data.error || 'ATS score not available.');
+            return;
+        }
+        renderAtsCard({
+            score: data.ats_score,
+            scores: data.scores
+        });
+        // Scroll into view
+        elements.analyticsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+        hideLoading();
+        showError('ATS score request failed. Please try again.');
+    }
+}
+
+function renderAtsCard(atsData) {
+    if (!elements.analyticsSection || !elements.analyticsGrid) return;
+    elements.analyticsSection.classList.remove('hidden');
+    let existing = document.getElementById('ats-score-card');
+    if (existing) {
+        existing.remove();
+    }
+    const card = document.createElement('div');
+    card.className = 'analytics-card';
+    card.id = 'ats-score-card';
+    const score = atsData.score ?? atsData.ats_score ?? 'N/A';
+    card.innerHTML = `
+        <div class="analytics-card-header">
+            <h3>ATS Score</h3>
+            <span class="analytics-value primary">${score}%</span>
+        </div>
+        <div class="analytics-card-body">
+            <ul>
+                <li>Skills score: ${atsData.scores?.skills ?? 'N/A'}</li>
+                <li>Experience score: ${atsData.scores?.experience ?? 'N/A'}</li>
+                <li>Education score: ${atsData.scores?.education ?? 'N/A'}</li>
+                <li>Summary score: ${atsData.scores?.summary ?? 'N/A'}</li>
+            </ul>
+        </div>
+    `;
+    elements.analyticsGrid.prepend(card);
+}
+
 function createJobCard(job) {
     const card = document.createElement('div');
     card.className = 'job-card';
     card.dataset.score = job.score || 0;
     card.dataset.company = job.company || '';
     card.dataset.date = job.published || '';
+    card.dataset.site = job.site || '';
 
     const score = parseFloat(job.score) || 0;
     const scoreClass = score >= 80 ? 'high' : score >= 60 ? 'medium' : 'low';
     
+    const atsScore = job.ats_score !== undefined && job.ats_score !== null ? parseInt(job.ats_score) : null;
     card.innerHTML = `
         <div class="job-header">
             <div>
                 <div class="job-title">${escapeHtml(job.title || 'N/A')}</div>
                 <div class="job-company">${escapeHtml(job.company || 'N/A')}</div>
             </div>
+            <div class="job-badges">
             <div class="match-score ${scoreClass}">${score}% Match</div>
+                ${atsScore !== null ? `<div class="ats-score">ATS ${atsScore}%</div>` : ''}
+            </div>
         </div>
         
         <div class="job-description">
@@ -495,20 +950,24 @@ function createJobCard(job) {
 }
 
 // ===== FILTERING & SORTING =====
+let currentScoreFilter = 'all';
 function handleFilterChange(e) {
     const filterBtns = document.querySelectorAll('.filter-btn');
     filterBtns.forEach(btn => btn.classList.remove('active'));
     e.target.classList.add('active');
 
     const filter = e.target.dataset.filter;
+    currentScoreFilter = filter;
     filterJobs(filter);
 }
 
 function filterJobs(filter) {
     const jobCards = document.querySelectorAll('.job-card');
+    const platformFilter = elements.platformSelect?.value || 'all';
     
     jobCards.forEach(card => {
         const score = parseFloat(card.dataset.score) || 0;
+        const site = (card.dataset.site || '').toLowerCase();
         let show = true;
 
         switch (filter) {
@@ -524,6 +983,10 @@ function filterJobs(filter) {
             case 'all':
             default:
                 show = true; // Show all jobs by default
+        }
+
+        if (platformFilter !== 'all' && site !== platformFilter.toLowerCase()) {
+            show = false;
         }
 
         if (show) {
@@ -580,8 +1043,14 @@ function showSuccess(message) {
 }
 
 function showError(message) {
+    console.error('Error:', message);
+    if (elements.errorMessage && elements.errorModal) {
     elements.errorMessage.textContent = message;
     elements.errorModal.classList.remove('hidden');
+    } else {
+        // Fallback: use alert if modal elements not found
+        alert('Error: ' + message);
+    }
 }
 
 function hideModal(modalId) {
