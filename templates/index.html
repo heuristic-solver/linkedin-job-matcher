@@ -122,16 +122,21 @@
         </section>
 
         <!-- Resume Analytics Section -->
-        <section id="analytics-section" class="analytics-section hidden">
+        <section id="analytics-section" class="analytics-section hidden bg-slate-50 py-12">
             <div class="container">
-                <div class="analytics-header">
-                    <h2>Resume Analytics Dashboard</h2>
-                    <p>Comprehensive analysis of your resume strength and key metrics</p>
-                    <button class="search-btn btn-secondary" id="ats-check-btn" style="margin-top: 1rem; width: 220px;">
-                        <i class="fas fa-clipboard-check"></i> Check ATS Score
-                    </button>
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm px-6 py-6 md:px-8 md:py-8 flex flex-col items-start md:items-center text-left md:text-center gap-4">
+                    <div class="space-y-2">
+                        <h2 class="text-3xl font-semibold text-slate-900">Resume Analytics Dashboard</h2>
+                        <p class="text-slate-600">Comprehensive analysis of your resume strength and key metrics</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 justify-start md:justify-center w-full">
+                        <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-slate-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900" id="ats-check-btn">
+                            <i class="fas fa-clipboard-check"></i>
+                            Check ATS Score
+                        </button>
+                    </div>
                 </div>
-                <div class="analytics-grid" id="analytics-grid">
+                <div class="analytics-grid grid gap-6 md:grid-cols-2 xl:grid-cols-3 mt-8" id="analytics-grid">
                     <!-- Analytics cards will be populated here -->
                 </div>
             </div>
