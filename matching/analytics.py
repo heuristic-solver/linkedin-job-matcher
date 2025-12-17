@@ -462,21 +462,20 @@ def _parse_duration_to_years(duration: str) -> float:
 
 
 def _get_highest_education(education: List) -> str:
-    """Determine highest education level"""
+    """
+    Return the first extracted education entry (raw), avoiding preference/heuristics.
+    This reflects exactly what was parsed from the CV.
+    """
     if not education or not isinstance(education, list):
         return "Not specified"
     
-    edu_text = ' '.join(str(e).lower() for e in education)
+    first = education[0]
+    if isinstance(first, dict):
+        degree = str(first.get("degree", "")).strip()
+        inst = str(first.get("institution", "")).strip()
+        year = str(first.get("year", "")).strip()
+        parts = [p for p in [degree, inst, year] if p]
+        return ' • '.join(parts)[:120] if parts else "Not specified"
     
-    # Prefer explicit BTech/BE before master's if present
-    if any(word in edu_text for word in ['phd', 'doctorate', 'doctoral']):
-        return "PhD"
-    elif any(word in edu_text for word in ['master', 'mba', 'ms', 'm.sc', 'mtech', 'm.tech', 'm.e', 'mca']):
-        return "Master's"
-    elif any(word in edu_text for word in ['btech', 'b.tech', 'be', 'b.e', 'bachelor', 'bs', 'b.sc', 'bca', 'bba', 'beng', 'b.eng']):
-        return "Bachelor's"
-    elif any(word in edu_text for word in ['diploma', 'certificate']):
-        return "Diploma/Certificate"
-    
-    return "Not specified"
+    return str(first).strip()[:120] if str(first).strip() else "Not specified"
 
