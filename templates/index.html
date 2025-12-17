@@ -204,21 +204,21 @@
         </section>
 
         <!-- Results Section -->
-        <section id="results-section" class="results-section hidden">
+        <section id="results-section" class="results-section hidden bg-slate-50 py-12">
             <div class="container">
-                <div class="results-header">
-                    <h2>Your Job Matches</h2>
-                    <p>Based on your resume analysis, here are the top opportunities for you</p>
+                <div class="results-header mb-6">
+                    <h2 class="text-2xl font-semibold text-slate-900">Your Job Matches</h2>
+                    <p class="text-slate-600 mt-1">Based on your resume analysis, here are the top opportunities for you</p>
                 </div>
-                <div class="results-filters">
-                    <div class="filter-group">
-                        <button class="filter-btn active" data-filter="all">All Jobs</button>
-                        <button class="filter-btn" data-filter="high">High Match (80%+)</button>
-                        <button class="filter-btn" data-filter="medium">Medium Match (60-79%)</button>
-                        <button class="filter-btn" data-filter="low">Lower Match (<60%)</button>
+                <div class="results-filters flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div class="filter-group flex flex-wrap gap-2">
+                        <button class="filter-btn active px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-slate-100 border-slate-200 hover:-translate-y-0.5 transition" data-filter="all">All Jobs</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-white border-slate-200 hover:-translate-y-0.5 transition" data-filter="high">High Match (80%+)</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-white border-slate-200 hover:-translate-y-0.5 transition" data-filter="medium">Medium Match (60-79%)</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-white border-slate-200 hover:-translate-y-0.5 transition" data-filter="low">Lower Match (&lt;60%)</button>
                     </div>
-                    <div class="sort-group">
-                        <select id="platform-select" style="margin-right: 0.5rem;">
+                    <div class="sort-group flex items-center gap-2">
+                        <select id="platform-select" class="px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 bg-white">
                             <option value="all">All Platforms</option>
                             <option value="LinkedIn">LinkedIn</option>
                             <option value="ATS">ATS</option>
@@ -228,14 +228,14 @@
                             <option value="Monster">Monster</option>
                             <option value="ZipRecruiter">ZipRecruiter</option>
                         </select>
-                        <select id="sort-select">
+                        <select id="sort-select" class="px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 bg-white">
                             <option value="score">Sort by Match Score</option>
                             <option value="date">Sort by Date</option>
                             <option value="company">Sort by Company</option>
                         </select>
                     </div>
                 </div>
-                <div class="results-grid" id="results-grid">
+                <div class="results-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3 mt-6" id="results-grid">
                     <!-- Job cards will be populated here -->
                 </div>
             </div>

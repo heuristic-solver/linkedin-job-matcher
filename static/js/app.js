@@ -878,64 +878,66 @@ function renderAtsCard(atsData) {
 
 function createJobCard(job) {
     const card = document.createElement('div');
-    card.className = 'job-card';
+    card.className = 'job-card rounded-xl border border-slate-200 bg-white shadow-sm p-5 flex flex-col gap-3 hover:shadow-md hover:-translate-y-0.5 transition cursor-pointer';
     card.dataset.score = job.score || 0;
     card.dataset.company = job.company || '';
     card.dataset.date = job.published || '';
     card.dataset.site = job.site || '';
 
     const score = parseFloat(job.score) || 0;
-    const scoreClass = score >= 80 ? 'high' : score >= 60 ? 'medium' : 'low';
+    const scoreBadge = score >= 80
+        ? 'bg-emerald-50 text-emerald-700'
+        : score >= 60
+            ? 'bg-amber-50 text-amber-700'
+            : 'bg-rose-50 text-rose-700';
     
     const atsScore = job.ats_score !== undefined && job.ats_score !== null ? parseInt(job.ats_score) : null;
     card.innerHTML = `
-        <div class="job-header">
-            <div>
-                <div class="job-title">${escapeHtml(job.title || 'N/A')}</div>
-                <div class="job-company">${escapeHtml(job.company || 'N/A')}</div>
+        <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+                <div class="text-base font-semibold text-slate-900">${escapeHtml(job.title || 'N/A')}</div>
+                <div class="text-sm text-slate-600">${escapeHtml(job.company || 'N/A')}</div>
             </div>
-            <div class="job-badges">
-            <div class="match-score ${scoreClass}">${score}% Match</div>
-                ${atsScore !== null ? `<div class="ats-score">ATS ${atsScore}%</div>` : ''}
+            <div class="flex items-center gap-2">
+                <div class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${scoreBadge}">${score}% Match</div>
+                ${atsScore !== null ? `<div class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-sky-50 text-sky-700">ATS ${atsScore}%</div>` : ''}
             </div>
         </div>
         
-        <div class="job-description">
-            ${escapeHtml(job.description || 'No description available').substring(0, 200)}...
+        <div class="text-sm text-slate-700 leading-relaxed">
+            ${escapeHtml(job.description || 'No description available').substring(0, 220)}...
         </div>
         
-        <div class="job-meta">
-            <span><i class="fas fa-building"></i> ${escapeHtml(job.site || 'N/A')}</span>
-            <span><i class="fas fa-calendar"></i> ${formatDate(job.published)}</span>
+        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+            <span class="inline-flex items-center gap-1"><i class="fas fa-building"></i> ${escapeHtml(job.site || 'N/A')}</span>
+            <span class="inline-flex items-center gap-1"><i class="fas fa-calendar"></i> ${formatDate(job.published)}</span>
         </div>
         
         ${job.explanation ? `
-            <div class="job-recommendations">
-                <h4><i class="fas fa-lightbulb"></i> AI Insights</h4>
-                <p style="font-size: var(--font-size-xs); margin-bottom: var(--space-2);">
+            <div class="mt-2 border-t border-slate-200 pt-3 space-y-2">
+                <h4 class="text-sm font-semibold text-slate-800 inline-flex items-center gap-1"><i class="fas fa-lightbulb text-amber-400"></i> AI Insights</h4>
+                <p class="text-xs text-slate-600">
                     ${escapeHtml(job.explanation).substring(0, 200)}...
                 </p>
                 ${job.recommended_improvements ? `
-                    <div style="margin-top: var(--space-3);">
-                        <strong style="font-size: var(--font-size-xs);">Recommendations:</strong>
+                    <div class="text-xs text-slate-700 space-y-1">
+                        <strong class="text-slate-800">Recommendations:</strong>
                         ${Array.isArray(job.recommended_improvements) ? `
-                            <ul style="margin-top: var(--space-1);">
+                            <ul class="list-disc list-inside space-y-1">
                                 ${job.recommended_improvements.slice(0, 3).map(improvement => 
                                     `<li>${escapeHtml(improvement)}</li>`
                                 ).join('')}
                             </ul>
                         ` : `
-                            <p style="font-size: var(--font-size-xs); margin-top: var(--space-1);">
-                                ${escapeHtml(job.recommended_improvements).substring(0, 150)}...
-                            </p>
+                            <p>${escapeHtml(job.recommended_improvements).substring(0, 150)}...</p>
                         `}
                     </div>
                 ` : ''}
             </div>
         ` : job.error ? `
-            <div class="job-recommendations">
-                <h4><i class="fas fa-exclamation-triangle"></i> Analysis Issue</h4>
-                <p style="font-size: var(--font-size-xs); color: var(--error-color);">
+            <div class="mt-2 border-t border-slate-200 pt-3 space-y-1">
+                <h4 class="text-sm font-semibold text-rose-600 inline-flex items-center gap-1"><i class="fas fa-exclamation-triangle"></i> Analysis Issue</h4>
+                <p class="text-xs text-rose-600">
                     ${escapeHtml(job.error || 'Unable to analyze this job at the moment.')}
                 </p>
             </div>
