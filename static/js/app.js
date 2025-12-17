@@ -2,6 +2,8 @@
 let currentSessionId = null;
 let currentResumeData = null;
 let progressInterval = null;
+let parsedCardVisible = false;
+let latestParsedResume = null;
 
 // ===== DOM ELEMENTS =====
 const elements = {
@@ -27,6 +29,7 @@ const elements = {
     advancedSearchBtn: document.getElementById('advanced-search-btn'),
     atsCheckBtn: document.getElementById('ats-check-btn'),
     platformSelect: document.getElementById('platform-select'),
+    parsedToggleBtn: document.getElementById('parsed-toggle-btn'),
     loadingOverlay: document.getElementById('loading-overlay'),
     successModal: document.getElementById('success-modal'),
     errorModal: document.getElementById('error-modal'),
@@ -90,6 +93,14 @@ function initializeEventListeners() {
             e.preventDefault();
             e.stopPropagation();
             await handleAtsCheck();
+        });
+    }
+    if (elements.parsedToggleBtn) {
+        elements.parsedToggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            parsedCardVisible = !parsedCardVisible;
+            renderParsedResumeCard();
         });
     }
 
@@ -415,6 +426,8 @@ function displayAnalytics(analytics) {
     elements.analyticsSection.classList.remove('hidden');
     elements.analyticsGrid.innerHTML = '';
     elements.analyticsGrid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
+    latestParsedResume = analytics.resume_data || null;
+    renderParsedResumeCard();
     
     const strength = analytics.strength_analysis;
     const metrics = analytics.key_metrics;
@@ -489,6 +502,33 @@ function getScoreColor(score) {
     if (score >= 80) return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100';
     if (score >= 60) return 'bg-amber-50 text-amber-700 ring-1 ring-amber-100';
     return 'bg-rose-50 text-rose-700 ring-1 ring-rose-100';
+}
+
+function renderParsedResumeCard() {
+    if (!elements.analyticsGrid) return;
+    const existing = document.getElementById('parsed-resume-card');
+    if (existing) existing.remove();
+    if (!parsedCardVisible || !latestParsedResume) return;
+    
+    const card = document.createElement('div');
+    card.id = 'parsed-resume-card';
+    card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-3 col-span-1 md:col-span-2 xl:col-span-3';
+    card.innerHTML = `
+        <div class="flex items-center justify-between">
+            <div class="text-slate-900 font-semibold">Parsed Resume (debug)</div>
+            <button class="text-xs text-slate-500 hover:text-slate-700" id="close-parsed-card">Hide</button>
+        </div>
+        <pre class="text-xs bg-slate-50 border border-slate-100 rounded p-3 overflow-auto max-h-64">${escapeHtml(JSON.stringify(latestParsedResume, null, 2))}</pre>
+    `;
+    elements.analyticsGrid.prepend(card);
+    const closeBtn = document.getElementById('close-parsed-card');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            parsedCardVisible = false;
+            renderParsedResumeCard();
+        });
+    }
 }
 
 async function handleMarketIntelligence() {
@@ -892,6 +932,7 @@ function createJobCard(job) {
             : 'bg-rose-50 text-rose-700';
     
     const atsScore = job.ats_score !== undefined && job.ats_score !== null ? parseInt(job.ats_score) : null;
+    const descGenerated = job.description_generated ? '<span class="inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600">Generated</span>' : '';
     card.innerHTML = `
         <div class="flex items-start justify-between gap-3">
             <div class="space-y-1">
@@ -905,7 +946,8 @@ function createJobCard(job) {
         </div>
         
         <div class="text-sm text-slate-700 leading-relaxed">
-            ${escapeHtml(job.description || 'No description available').substring(0, 220)}...
+            <div class="flex items-center gap-2 mb-1">${descGenerated}</div>
+            ${escapeHtml(job.description || 'No description available').substring(0, 180)}...
         </div>
         
         <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500">

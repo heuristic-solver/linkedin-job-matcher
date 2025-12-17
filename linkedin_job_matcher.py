@@ -759,6 +759,7 @@ def generate_fallback_jobs(query: str, location: str) -> list[dict]:
             "title": f"Senior {query} Engineer",
             "company": random.choice(tech_companies),
             "description": f"We are seeking an experienced {query} professional to join our growing team. This role offers excellent growth opportunities and competitive benefits. Responsibilities include developing innovative solutions, collaborating with cross-functional teams, and driving technical excellence.",
+            "description_generated": True,
             "link": search_urls["LinkedIn"],
             "published": (datetime.now() - timedelta(days=random.randint(0, 3))).strftime("%Y-%m-%d")
         },
@@ -767,6 +768,7 @@ def generate_fallback_jobs(query: str, location: str) -> list[dict]:
             "title": f"{query} Specialist",
             "company": random.choice(tech_companies),
             "description": f"Join our dynamic team as a {query} specialist. Work on cutting-edge projects with industry-leading technologies. This role requires strong technical skills, problem-solving abilities, and a passion for innovation.",
+            "description_generated": True,
             "link": search_urls["Indeed"],
             "published": (datetime.now() - timedelta(days=random.randint(1, 7))).strftime("%Y-%m-%d")
         },
@@ -775,6 +777,7 @@ def generate_fallback_jobs(query: str, location: str) -> list[dict]:
             "title": f"Junior {query} Developer",
             "company": random.choice(tech_companies),
             "description": f"Great opportunity for someone starting their career in {query}. We provide mentorship and training in a collaborative environment. Perfect for recent graduates or professionals looking to transition into this exciting field.",
+            "description_generated": True,
             "link": search_urls["CareerJet"],
             "published": (datetime.now() - timedelta(days=random.randint(0, 5))).strftime("%Y-%m-%d")
         }
@@ -895,6 +898,7 @@ def _normalize_job_listing(job: Dict, default_query: str = None) -> Dict:
     """Clean job fields to avoid masked/obfuscated titles/descriptions."""
     sanitized = job.copy()
     query = (default_query or job.get('title') or "Role").strip() or "Role"
+    sanitized["description_generated"] = False
     
     def is_masked(text: str) -> bool:
         if not text:
@@ -924,6 +928,7 @@ def _normalize_job_listing(job: Dict, default_query: str = None) -> Dict:
     desc = re.sub(r'\*+', ' ', desc).strip()
     if is_masked(desc) or len(desc) < 40:
         desc = generate_linkedin_job_description(title, company, query)
+        sanitized["description_generated"] = True
     sanitized['description'] = desc
     
     return sanitized
@@ -968,13 +973,14 @@ def match_jobs_to_resume(jobs: List[Dict], resume_data: Dict, job_query: str = N
         match_score, explanation, improvements, skill_match_ratio = _calculate_job_match(
             job_clean, resume_skills, years_exp, resume_data
         )
-        ats_score = min(100, max(0, int(skill_match_ratio * 100))) if skill_match_ratio else 70
+        ats_score = min(100, max(0, int(skill_match_ratio * 100))) if skill_match_ratio else 40
         
         matched_job = {
             **job_clean,
             'score': match_score,  # Use 'score' for frontend compatibility
             'match_score': match_score,  # Keep both
             'ats_score': ats_score,
+            'description_generated': job_clean.get("description_generated", False),
             'explanation': explanation,
             'recommended_improvements': improvements
         }

@@ -97,7 +97,7 @@ def analyze_resume_route(session_id):
             files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.startswith(session_id)]
             if not files:
                 progress_store[session_id] = {'step': 'error', 'progress': 0, 'message': 'Resume file not found. Please upload again.'}
-                return jsonify({'error': 'Resume file not found'}), 404
+            return jsonify({'error': 'Resume file not found'}), 404
         except Exception as e:
             progress_store[session_id] = {'step': 'error', 'progress': 0, 'message': f'Error accessing upload folder: {str(e)}'}
             return jsonify({'error': 'Error accessing upload folder'}), 500
@@ -299,6 +299,7 @@ def get_resume_analytics(session_id):
         analytics = {
             'strength_analysis': strength_analysis,
             'key_metrics': key_metrics,
+            'resume_data': resume_data,
             'timestamp': time.time()
         }
         
