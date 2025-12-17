@@ -414,6 +414,7 @@ function displayAnalytics(analytics) {
     
     elements.analyticsSection.classList.remove('hidden');
     elements.analyticsGrid.innerHTML = '';
+    elements.analyticsGrid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
     
     const strength = analytics.strength_analysis;
     const metrics = analytics.key_metrics;
@@ -436,7 +437,7 @@ function displayAnalytics(analytics) {
     const metricsCard = createAnalyticsCard(
         'Key Metrics',
         '',
-        'primary',
+        '',
         [
             `Total Skills: ${metrics.total_skills}`,
             `Years Experience: ~${metrics.years_experience}`,
@@ -467,15 +468,17 @@ function displayAnalytics(analytics) {
 
 function createAnalyticsCard(title, value, colorClass, items) {
     const card = document.createElement('div');
-    card.className = 'analytics-card';
+    card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4';
+    
+    const badgeClass = colorClass || '';
     card.innerHTML = `
-        <div class="analytics-card-header">
-            <h3>${escapeHtml(title)}</h3>
-            ${value ? `<div class="analytics-value ${colorClass}">${escapeHtml(value)}</div>` : ''}
+        <div class="flex items-start justify-between gap-3">
+            <div class="text-slate-900 font-semibold text-lg">${escapeHtml(title)}</div>
+            ${value ? `<div class="inline-flex items-center rounded-lg px-3 py-1 text-sm font-semibold ${badgeClass}">${escapeHtml(value)}</div>` : ''}
         </div>
-        <div class="analytics-card-body">
-            <ul>
-                ${items.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+        <div class="analytics-card-body text-sm text-slate-700">
+            <ul class="space-y-2">
+                ${items.map(item => `<li class="flex items-start gap-2"><span class="mt-1 h-2 w-2 rounded-full bg-slate-300"></span><span>${escapeHtml(item)}</span></li>`).join('')}
             </ul>
         </div>
     `;
@@ -483,9 +486,9 @@ function createAnalyticsCard(title, value, colorClass, items) {
 }
 
 function getScoreColor(score) {
-    if (score >= 80) return 'success';
-    if (score >= 60) return 'warning';
-    return 'error';
+    if (score >= 80) return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100';
+    if (score >= 60) return 'bg-amber-50 text-amber-700 ring-1 ring-amber-100';
+    return 'bg-rose-50 text-rose-700 ring-1 ring-rose-100';
 }
 
 async function handleMarketIntelligence() {
@@ -668,7 +671,7 @@ function startProgressPolling() {
         } catch (error) {
             console.error('Error fetching progress:', error);
             if (pollCount >= 5) { // Only stop after 5 failed attempts
-                clearInterval(progressInterval);
+            clearInterval(progressInterval);
                 progressInterval = null;
                 updateProgressStep('error', 0, 'Error fetching progress. Please refresh and try again.');
                 showError('Unable to fetch job search progress. Please try again.');
