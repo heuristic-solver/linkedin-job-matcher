@@ -86,6 +86,29 @@ class StructuredResumeExtractor:
                 'unix', 'bash', 'powershell', 'vim', 'vscode', 'intellij', 'eclipse'
             ]
         }
+        # Canonical skill synonyms/variants
+        self.skill_synonyms = {
+            'py': 'python',
+            'python3': 'python',
+            'js': 'javascript',
+            'ts': 'typescript',
+            'node': 'node.js',
+            'nodejs': 'node.js',
+            'reactjs': 'react',
+            'react.js': 'react',
+            'vuejs': 'vue',
+            'vue.js': 'vue',
+            'html5': 'html',
+            'css3': 'css',
+            'gcloud': 'gcp',
+            'google cloud platform': 'gcp',
+            'postgres': 'postgresql',
+            'postgresql': 'postgresql',
+            'aws cloud': 'aws',
+            'azure cloud': 'azure',
+            'ms sql': 'sql',
+            'mysql server': 'mysql'
+        }
         
         # Education degree patterns
         self.degree_patterns = [
@@ -93,6 +116,7 @@ class StructuredResumeExtractor:
             re.compile(r'(?:Master|M\.S\.|M\.A\.|M\.Tech\.|M\.E\.|M\.Sc\.|MS|MA|MBA|M\.Sc)\s+(?:of|in)?\s*(?:Science|Arts|Engineering|Technology|Business|Computer Science)?', re.IGNORECASE),
             re.compile(r'(?:PhD|Ph\.D\.|Doctorate|Doctoral)\s+(?:in|of)?', re.IGNORECASE),
             re.compile(r'(?:Diploma|Certificate|Associate)\s+(?:in|of)?', re.IGNORECASE),
+            re.compile(r'(?:BCA|MCA|BBA|MBA|B\.Com|M\.Com|BSc|MSc|B\.Pharm|M\.Pharm)', re.IGNORECASE),
         ]
         
         # Institution patterns
@@ -106,6 +130,24 @@ class StructuredResumeExtractor:
             re.compile(r'(\w+)\s+(\d{4})'),  # Month YYYY
             re.compile(r'(\d{4})'),  # Just year
         ]
+
+    def _normalize_text(self, text: str) -> str:
+        """Normalize bullets/whitespace while keeping structure."""
+        if not text:
+            return ""
+        cleaned = text.replace('\r', '\n')
+        cleaned = re.sub(r'[\u2022\u2023\u25E6\u2043\u2219•]', ', ', cleaned)  # bullets -> comma to preserve delimiters
+        cleaned = re.sub(r'[ \t]+', ' ', cleaned)
+        cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+        return cleaned.strip()
+
+    def _canonical_skill(self, skill: str) -> str:
+        """Lowercase, map synonyms, and title-case for output."""
+        if not skill:
+            return ""
+        s = skill.strip().lower()
+        s = self.skill_synonyms.get(s, s)
+        return s.title()
     
     def extract_contact_info(self, text: str) -> ContactInfo:
         """Extract contact information with high accuracy"""
@@ -159,10 +201,10 @@ class StructuredResumeExtractor:
         skills = []
         text_lower = text.lower()
         
-        # Find skills section
+        # Find skills section with or without trailing colon
         skills_section_patterns = [
-            r'(?:skills?|technical skills?|technologies?|competencies?|proficiencies?|expertise)[:]\s*(.+?)(?:\n\n|\n(?=[A-Z][a-z]+\s*:)|$)',
-            r'(?:core competencies?|key skills?)[:]\s*(.+?)(?:\n\n|\n(?=[A-Z][a-z]+\s*:)|$)',
+            r'(?:skills?|technical skills?|technologies?|competencies?|proficiencies?|expertise)\s*:?\s*(.+?)(?:\n\n|\n(?=[A-Z][A-Za-z ]{2,}:)|\n(?=[A-Z]{3,}\b)|$)',
+            r'(?:core competencies?|key skills?)\s*:?\s*(.+?)(?:\n\n|\n(?=[A-Z][A-Za-z ]{2,}:)|\n(?=[A-Z]{3,}\b)|$)',
         ]
         
         skills_text = ""
@@ -187,13 +229,10 @@ class StructuredResumeExtractor:
                 pattern_partial = re.escape(skill.lower())
                 
                 if re.search(pattern_exact, search_text.lower()):
-                    if skill.lower() not in found_skill_names:
-                        skill_entry = SkillEntry(
-                            name=skill.title(),
-                            category=category
-                        )
-                        skills.append(skill_entry)
-                        found_skill_names.add(skill.lower())
+                    canonical = self._canonical_skill(skill)
+                    if canonical.lower() not in found_skill_names:
+                        skills.append(SkillEntry(name=canonical, category=category))
+                        found_skill_names.add(canonical.lower())
         
         # Extract additional skills from dedicated section OR entire text
         # First try the skills section if found
@@ -207,12 +246,10 @@ class StructuredResumeExtractor:
                     if not any(word in item.lower() for word in 
                               ['years', 'experience', 'proficient', 'skilled', 'expert', 'level', 
                                'working', 'worked', 'utilized', 'used', 'developed']):
-                        if item.lower() not in found_skill_names:
-                            skills.append(SkillEntry(
-                                name=item.strip(),
-                                category='other'
-                            ))
-                            found_skill_names.add(item.lower())
+                        canonical = self._canonical_skill(item)
+                        if canonical.lower() not in found_skill_names:
+                            skills.append(SkillEntry(name=canonical, category='other'))
+                            found_skill_names.add(canonical.lower())
         
         # Also extract skills mentioned in experience/projects sections
         # Look for patterns like "used Python", "worked with React", "experience with Java"
@@ -237,20 +274,27 @@ class StructuredResumeExtractor:
                                 break
                         
                         if found_in_db or len(potential_skill.split()) <= 2:
-                            skills.append(SkillEntry(
-                                name=potential_skill,
-                                category='other'
-                            ))
-                            found_skill_names.add(potential_lower)
+                            canonical = self._canonical_skill(potential_skill)
+                            skills.append(SkillEntry(name=canonical, category='other'))
+                            found_skill_names.add(canonical.lower())
         
-        return skills[:30]  # Limit to top 30 skills
+        # Deduplicate and keep stable order
+        unique_skills = []
+        seen = set()
+        for skill in skills:
+            key = (skill.name.lower(), skill.category)
+            if key not in seen:
+                unique_skills.append(skill)
+                seen.add(key)
+        
+        return unique_skills[:30]  # Limit to top 30 skills
     
     def extract_education(self, text: str) -> List[EducationEntry]:
         """Extract education with high precision"""
         education_list = []
         
         # Find education section
-        edu_section_pattern = r'(?:education|academic|qualification|degrees?)[:]\s*(.+?)(?:\n\n|\n(?=[A-Z][a-z]+\s*:)|$)'
+        edu_section_pattern = r'(?:education|academic|qualification|degrees?)\s*:?\s*(.+?)(?:\n\n|\n(?=[A-Z][a-z]+\s*:)|\n(?=[A-Z]{3,}\b)|$)'
         edu_section_match = re.search(edu_section_pattern, text, re.IGNORECASE | re.DOTALL)
         
         search_text = edu_section_match.group(1) if edu_section_match else text
@@ -283,6 +327,10 @@ class StructuredResumeExtractor:
             year_match = re.search(r'\b(19|20)\d{2}\b', entry_text)
             if year_match:
                 edu.year = year_match.group(0)
+            else:
+                grad_match = re.search(r'graduat(?:ed|ion)\s*(?:in|:)?\s*(19|20)\d{2}', entry_text, re.IGNORECASE)
+                if grad_match:
+                    edu.year = grad_match.group(0)[-4:]
             
             # Extract GPA if present
             gpa_match = re.search(r'GPA[:\s]*([0-9]\.[0-9]{1,2})|([0-9]\.[0-9]{1,2})\s*GPA', entry_text, re.IGNORECASE)
@@ -304,15 +352,24 @@ class StructuredResumeExtractor:
             if edu.degree or edu.institution:
                 education_list.append(edu)
         
-        return education_list[:5]  # Limit to 5 education entries
+        # Deduplicate by degree + institution + year
+        deduped = []
+        seen = set()
+        for edu in education_list:
+            key = (edu.degree.lower(), edu.institution.lower(), edu.year)
+            if key not in seen:
+                deduped.append(edu)
+                seen.add(key)
+        
+        return deduped[:5]  # Limit to 5 education entries
     
     def extract_experience(self, text: str) -> List[ExperienceEntry]:
         """Extract work experience with dates - handles multiple formats, no assumptions"""
         experience_list = []
         
-        # Find experience section - try multiple section names
+        # Find experience section - allow headings with/without colon
         exp_section_patterns = [
-            r'(?:experience|work experience|employment|professional experience|career|work history|positions? held)[:]\s*(.+?)(?:\n\n|\n(?=[A-Z][a-z]+\s*:)|$)',
+            r'(?:experience|work experience|employment|professional experience|career|work history|positions? held)\s*:?\s*(.+?)(?:\n\n|$)',
         ]
         
         search_text = text
@@ -332,6 +389,17 @@ class StructuredResumeExtractor:
         
         # Try to split entries
         entries_text = [search_text]  # Start with full text
+        def _normalize_year(year_str: str):
+            if not year_str:
+                return None
+            year_str = str(year_str)
+            if len(year_str) == 2 and year_str.isdigit():
+                year = int(year_str)
+                return 2000 + year if year < 50 else 1900 + year
+            if year_str.isdigit():
+                return int(year_str)
+            return None
+        
         for sep in entry_separators:
             new_entries = []
             for entry in entries_text:
@@ -360,10 +428,14 @@ class StructuredResumeExtractor:
             date_range_patterns = [
                 # "YYYY - YYYY" or "YYYY - Present"
                 r'(\d{4})\s*[-–—]\s*(\d{4}|Present|Current|Now|Till Date|Till now)',
+                # "YYYY to YYYY/Present"
+                r'(\d{4})\s*(?:to|until|till)\s*(\d{4}|Present|Current|Now)',
                 # "MM/YYYY - MM/YYYY" or "MM/YYYY - Present"
                 r'(\d{1,2})[/-](\d{4})\s*[-–—]\s*(\d{1,2})?[/-]?(\d{4}|Present|Current|Now)?',
                 # "Month YYYY - Month YYYY" or "Month YYYY - Present"
                 r'([A-Za-z]+)\s+(\d{4})\s*[-–—]\s*([A-Za-z]+)?\s*(\d{4}|Present|Current|Now)?',
+                # "Mon'YY - Mon'YY/Present"
+                r'([A-Za-z]{3,9})\'?(\d{2,4})\s*[-–—]\s*([A-Za-z]{3,9})?\'?(\d{2,4}|Present|Current|Now)?',
                 # "YYYY-YYYY" (no spaces)
                 r'(\d{4})[-–—](\d{4})',
             ]
@@ -374,14 +446,36 @@ class StructuredResumeExtractor:
                 if date_match:
                     groups = date_match.groups()
                     
+                    # Pattern 5: "Mon'YY - Mon'YY/Present" (handles 2-digit years)
+                    if len(groups) == 4 and groups[0] and groups[1] and re.match(r'[A-Za-z]{3,9}', groups[0]):
+                        start_year = _normalize_year(groups[1])
+                        if start_year and groups[0].lower() in month_names:
+                            exp.start_date = f"{month_names[groups[0].lower()]:02d}/{start_year}"
+                            if groups[3]:
+                                if str(groups[3]).lower() in ['present', 'current', 'now', 'till date', 'till now']:
+                                    end_year = datetime.now().year
+                                    end_month = datetime.now().month
+                                    exp.end_date = f"{end_month:02d}/{end_year}"
+                                else:
+                                    end_year = _normalize_year(groups[3])
+                                    if end_year and groups[2] and groups[2].lower() in month_names:
+                                        exp.end_date = f"{month_names[groups[2].lower()]:02d}/{end_year}"
+                                    elif end_year:
+                                        exp.end_date = str(end_year)
+                            elif groups[2] and groups[2].lower() in month_names:
+                                exp.end_date = f"{month_names[groups[2].lower()]:02d}/{start_year}"
+                            else:
+                                exp.end_date = "Present"
+                            date_found = True
+                    
                     # Pattern 1: "YYYY - YYYY/Present"
-                    if len(groups) == 2 and groups[0].isdigit():
+                    if not date_found and len(groups) == 2 and groups[0].isdigit():
                         exp.start_date = groups[0]
                         exp.end_date = groups[1] if groups[1] else "Present"
                         date_found = True
                     
                     # Pattern 2: "MM/YYYY - MM/YYYY/Present"
-                    elif len(groups) >= 2 and groups[1].isdigit() and len(groups[1]) == 4:
+                    elif not date_found and len(groups) >= 2 and groups[1].isdigit() and len(groups[1]) == 4:
                         if len(groups[0]) <= 2:  # Month
                             exp.start_date = f"{groups[0]}/{groups[1]}"
                             if groups[2] and groups[3]:
@@ -396,7 +490,7 @@ class StructuredResumeExtractor:
                         date_found = True
                     
                     # Pattern 3: "Month YYYY - Month YYYY/Present"
-                    elif len(groups) >= 2 and groups[1].isdigit():
+                    elif not date_found and len(groups) >= 2 and groups[1].isdigit():
                         month = groups[0].lower()
                         if month in month_names:
                             exp.start_date = f"{month_names[month]:02d}/{groups[1]}"
@@ -413,7 +507,7 @@ class StructuredResumeExtractor:
                             date_found = True
                     
                     # Pattern 4: "YYYY-YYYY" (compact)
-                    elif len(groups) == 2 and all(g.isdigit() for g in groups):
+                    elif not date_found and len(groups) == 2 and all(g.isdigit() for g in groups):
                         exp.start_date = groups[0]
                         exp.end_date = groups[1]
                         date_found = True
@@ -489,6 +583,17 @@ class StructuredResumeExtractor:
         current_year = datetime.now().year
         current_month = datetime.now().month
         
+        def _norm_year(val: str):
+            if not val:
+                return None
+            val = str(val)
+            if len(val) == 2 and val.isdigit():
+                num = int(val)
+                return 2000 + num if num < 50 else 1900 + num
+            if val.isdigit() and len(val) == 4:
+                return int(val)
+            return None
+        
         month_names = {
             'january': 1, 'jan': 1, 'february': 2, 'feb': 2, 'march': 3, 'mar': 3,
             'april': 4, 'apr': 4, 'may': 5, 'june': 6, 'jun': 6, 'july': 7, 'jul': 7,
@@ -504,7 +609,7 @@ class StructuredResumeExtractor:
         mm_yyyy = re.search(r'(\d{1,2})[/-](\d{4})', start)
         if mm_yyyy:
             start_month = int(mm_yyyy.group(1))
-            start_year = int(mm_yyyy.group(2))
+            start_year = _norm_year(mm_yyyy.group(2))
         else:
             # Format: "Month YYYY" or "Mon YYYY"
             month_year = re.search(r'([A-Za-z]+)\s+(\d{4})', start, re.IGNORECASE)
@@ -512,12 +617,12 @@ class StructuredResumeExtractor:
                 month_name = month_year.group(1).lower()
                 if month_name in month_names:
                     start_month = month_names[month_name]
-                    start_year = int(month_year.group(2))
+                    start_year = _norm_year(month_year.group(2))
             else:
                 # Format: Just "YYYY"
                 year_only = re.search(r'\b(19|20)\d{2}\b', start)
                 if year_only:
-                    start_year = int(year_only.group(0))
+                    start_year = _norm_year(year_only.group(0))
                     start_month = 1  # Default to January if only year given
         
         if not start_year:
@@ -537,7 +642,8 @@ class StructuredResumeExtractor:
                 mm_yyyy_end = re.search(r'(\d{1,2})[/-](\d{4})', end)
                 if mm_yyyy_end:
                     end_month = int(mm_yyyy_end.group(1))
-                    end_year = int(mm_yyyy_end.group(2))
+                    norm_end = _norm_year(mm_yyyy_end.group(2))
+                    end_year = norm_end if norm_end else end_year
                 else:
                     # Format: "Month YYYY" or "Mon YYYY"
                     month_year_end = re.search(r'([A-Za-z]+)\s+(\d{4})', end, re.IGNORECASE)
@@ -545,12 +651,15 @@ class StructuredResumeExtractor:
                         month_name_end = month_year_end.group(1).lower()
                         if month_name_end in month_names:
                             end_month = month_names[month_name_end]
-                            end_year = int(month_year_end.group(2))
+                            norm_end = _norm_year(month_year_end.group(2))
+                            end_year = norm_end if norm_end else end_year
                     else:
                         # Format: Just "YYYY"
                         year_only_end = re.search(r'\b(19|20)\d{2}\b', end)
                         if year_only_end:
-                            end_year = int(year_only_end.group(0))
+                            norm_end = _norm_year(year_only_end.group(0))
+                            if norm_end:
+                                end_year = norm_end
                             end_month = 12  # Default to December if only year given
         
         # Calculate exact duration (no assumptions beyond defaults for missing month)
@@ -584,6 +693,7 @@ class StructuredResumeExtractor:
     
     def extract_all(self, text: str) -> Dict:
         """Main extraction method - returns structured data"""
+        text = self._normalize_text(text)
         result = {
             'name': '',
             'email': '',

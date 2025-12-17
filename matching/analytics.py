@@ -11,6 +11,15 @@ def calculate_resume_strength_score(resume_data: Dict) -> Dict:
     Calculate overall resume strength score and provide detailed breakdown
     Returns a dictionary with scores and insights
     """
+    # Canonical skill synonyms
+    skill_synonyms = {
+        'py': 'python', 'python3': 'python', 'js': 'javascript', 'ts': 'typescript',
+        'node': 'node.js', 'nodejs': 'node.js', 'reactjs': 'react', 'react.js': 'react',
+        'vuejs': 'vue', 'vue.js': 'vue', 'html5': 'html', 'css3': 'css',
+        'gcloud': 'gcp', 'google cloud platform': 'gcp', 'postgres': 'postgresql',
+        'mysql server': 'mysql', 'aws cloud': 'aws', 'azure cloud': 'azure'
+    }
+    
     scores = {
         'overall': 0,
         'skills': 0,
@@ -43,25 +52,37 @@ def calculate_resume_strength_score(resume_data: Dict) -> Dict:
     if isinstance(skills, str):
         skills = [s.strip() for s in skills.split(',')]
     
-    num_skills = len(skills) if isinstance(skills, list) else 0
+    # Canonicalize and deduplicate skills
+    canonical_skills = []
+    seen = set()
+    for s in skills if isinstance(skills, list) else []:
+        key = str(s).strip().lower()
+        key = skill_synonyms.get(key, key)
+        canonical = key.title()
+        if canonical.lower() not in seen and canonical:
+            canonical_skills.append(canonical)
+            seen.add(canonical.lower())
     
-    if num_skills >= 15:
+    num_skills = len(canonical_skills)
+    
+    if num_skills >= 18:
         skills_score = 100
         insights['strengths'].append("Strong skillset with comprehensive technical skills")
-    elif num_skills >= 10:
-        skills_score = 85
-    elif num_skills >= 7:
-        skills_score = 70
-        insights['recommendations'].append("Consider adding more relevant technical skills")
-    elif num_skills >= 4:
-        skills_score = 55
-        insights['weaknesses'].append("Limited skills listed - expand your technical skillset")
+    elif num_skills >= 12:
+        skills_score = 90
+        insights['strengths'].append("Good breadth of technical skills")
+    elif num_skills >= 8:
+        skills_score = 75
+        insights['recommendations'].append("Add a few more role-relevant skills to strengthen coverage")
+    elif num_skills >= 5:
+        skills_score = 60
+        insights['weaknesses'].append("Limited skills listed - expand your technical stack")
     elif num_skills > 0:
-        skills_score = 40
-        insights['weaknesses'].append("Very few skills listed - add more relevant skills")
+        skills_score = 45
+        insights['weaknesses'].append("Very few skills listed - add core tools/languages for your target role")
     else:
-        skills_score = 0
-        insights['weaknesses'].append("No skills found - skills section is essential")
+        skills_score = 20
+        insights['weaknesses'].append("No skills found - include a clear skills section")
     
     scores['skills'] = skills_score
     
@@ -90,19 +111,21 @@ def calculate_resume_strength_score(resume_data: Dict) -> Dict:
     years_exp = _estimate_years_experience(normalized_experience)
     
     # Score based on both number of roles and years (prioritize years for accuracy)
-    if years_exp >= 5 and num_roles >= 2:
+    if years_exp >= 8 and num_roles >= 3:
         exp_score = 100
-        insights['strengths'].append(f"Extensive work experience ({int(years_exp)}+ years, {num_roles} roles)")
-    elif years_exp >= 3 and num_roles >= 1:
+        insights['strengths'].append(f"Extensive work experience ({years_exp}+ years, {num_roles} roles)")
+    elif years_exp >= 5:
         exp_score = 90
-        insights['strengths'].append(f"Good work experience ({int(years_exp)} years, {num_roles} roles)")
-    elif years_exp >= 2 or num_roles >= 2:
+        insights['strengths'].append(f"Strong work experience ({years_exp} years)")
+    elif years_exp >= 3:
         exp_score = 80
-    elif years_exp >= 1 or num_roles >= 1:
+        insights['recommendations'].append("Highlight impact and outcomes for your recent roles")
+    elif years_exp >= 1.5:
         exp_score = 65
-        insights['recommendations'].append("Consider highlighting projects or internships to supplement experience")
+        insights['recommendations'].append("Add measurable achievements to bolster experience section")
     elif years_exp > 0 or num_roles > 0:
         exp_score = 50
+        insights['weaknesses'].append("Experience is light - include internships, projects, or freelance work")
     else:
         exp_score = 25
         insights['weaknesses'].append("Limited work experience - highlight projects, internships, or volunteer work")
@@ -119,8 +142,8 @@ def calculate_resume_strength_score(resume_data: Dict) -> Dict:
     # Check education level quality
     edu_text = ' '.join(str(e).lower() for e in education)
     has_phd = any(word in edu_text for word in ['phd', 'doctorate', 'doctoral'])
-    has_masters = any(word in edu_text for word in ['master', 'mba', 'ms', 'm.sc', 'm.tech', 'm.s', 'm.a'])
-    has_bachelors = any(word in edu_text for word in ['bachelor', 'bs', 'b.sc', 'b.tech', 'b.e', 'be', 'b.s', 'b.a'])
+    has_masters = any(word in edu_text for word in ['master', 'mba', 'ms', 'm.sc', 'mtech', 'm.tech', 'm.e', 'mca'])
+    has_bachelors = any(word in edu_text for word in ['bachelor', 'bs', 'b.sc', 'btech', 'b.tech', 'b.e', 'be', 'bca', 'bba', 'b.s', 'b.a'])
     
     if has_phd:
         edu_score = 100
@@ -148,29 +171,29 @@ def calculate_resume_strength_score(resume_data: Dict) -> Dict:
     summary_length = len(summary) if summary else 0
     
     if summary_length >= 200:
-        summary_score = 100
+        summary_score = 95
         insights['strengths'].append("Comprehensive professional summary")
-    elif summary_length >= 100:
+    elif summary_length >= 120:
         summary_score = 85
-    elif summary_length >= 50:
+    elif summary_length >= 60:
         summary_score = 70
         insights['recommendations'].append("Expand your professional summary for better impact")
     elif summary_length > 0:
-        summary_score = 50
+        summary_score = 45
         insights['weaknesses'].append("Summary too brief - add more details about your professional background")
     else:
-        summary_score = 0
+        summary_score = 20
         insights['weaknesses'].append("Missing professional summary - add a compelling summary")
     
     scores['summary'] = summary_score
     
     # Calculate overall score (weighted average)
     scores['overall'] = round(
-        (scores['contact_info'] * 0.1 +
-         scores['skills'] * 0.3 +
-         scores['experience'] * 0.3 +
+        (scores['contact_info'] * 0.05 +
+         scores['skills'] * 0.35 +
+         scores['experience'] * 0.35 +
          scores['education'] * 0.15 +
-         scores['summary'] * 0.15)
+         scores['summary'] * 0.1)
     )
     
     # Generate additional recommendations
@@ -375,6 +398,17 @@ def _parse_duration_to_years(duration: str) -> float:
     current_year = datetime.now().year
     current_month = datetime.now().month
     
+    def _norm_year(val: str):
+        if not val:
+            return None
+        val = str(val)
+        if len(val) == 2 and val.isdigit():
+            num = int(val)
+            return 2000 + num if num < 50 else 1900 + num
+        if len(val) == 4 and val.isdigit():
+            return int(val)
+        return None
+    
     month_names = {
         'january': 1, 'jan': 1, 'february': 2, 'feb': 2, 'march': 3, 'mar': 3,
         'april': 4, 'apr': 4, 'may': 5, 'june': 6, 'jun': 6, 'july': 7, 'jul': 7,
@@ -403,24 +437,24 @@ def _parse_duration_to_years(duration: str) -> float:
             return months / 12.0
     
     # Pattern: "MM/YYYY - MM/YYYY" or "MM/YYYY - Present"
-    pattern2 = r'(\d{1,2})[/-](\d{4})\s*[-–—]\s*(\d{1,2})?[/-]?(\d{4}|Present|Current|Now)?'
+    pattern2 = r'(\d{1,2})[/-](\d{2,4})\s*[-–—]\s*(\d{1,2})?[/-]?(\d{2,4}|Present|Current|Now)?'
     match2 = re.search(pattern2, duration, re.IGNORECASE)
     if match2:
         start_month = int(match2.group(1))
-        start_year = int(match2.group(2))
+        start_year = _norm_year(match2.group(2))
         
         if match2.group(4):
             if match2.group(4).lower() in ['present', 'current', 'now']:
                 end_year = current_year
                 end_month = current_month
             else:
-                end_year = int(match2.group(4))
+                end_year = _norm_year(match2.group(4))
                 end_month = int(match2.group(3)) if match2.group(3) else 12
         else:
             end_year = current_year
             end_month = current_month
         
-        if 1950 <= start_year <= current_year and start_year <= end_year:
+        if start_year and end_year and 1950 <= start_year <= current_year and start_year <= end_year:
             months = (end_year - start_year) * 12 + (end_month - start_month)
             return months / 12.0
     
@@ -436,9 +470,9 @@ def _get_highest_education(education: List) -> str:
     
     if any(word in edu_text for word in ['phd', 'doctorate', 'doctoral']):
         return "PhD"
-    elif any(word in edu_text for word in ['master', 'mba', 'ms', 'm.sc', 'm.tech']):
+    elif any(word in edu_text for word in ['master', 'mba', 'ms', 'm.sc', 'mtech', 'm.tech', 'm.e', 'mca']):
         return "Master's"
-    elif any(word in edu_text for word in ['bachelor', 'bachelor', 'bs', 'b.sc', 'b.tech', 'be']):
+    elif any(word in edu_text for word in ['bachelor', 'bs', 'b.sc', 'btech', 'b.tech', 'be', 'b.e', 'bca', 'bba']):
         return "Bachelor's"
     elif any(word in edu_text for word in ['diploma', 'certificate']):
         return "Diploma/Certificate"

@@ -326,7 +326,25 @@ def parse_resume_fallback(resume_text: str) -> dict:
                     if not any(word in skill.lower() for word in ['years', 'experience', 'proficient', 'skilled', 'expert']):
                         found_skills.append(skill)
     
-    resume_data["skills"] = list(set(found_skills))  # Remove duplicates
+    # Canonicalize and deduplicate skills
+    skill_synonyms = {
+        'py': 'python', 'python3': 'python', 'js': 'javascript', 'ts': 'typescript',
+        'node': 'node.js', 'nodejs': 'node.js', 'reactjs': 'react', 'react.js': 'react',
+        'vuejs': 'vue', 'vue.js': 'vue', 'html5': 'html', 'css3': 'css',
+        'gcloud': 'gcp', 'google cloud platform': 'gcp', 'postgres': 'postgresql',
+        'mysql server': 'mysql', 'aws cloud': 'aws', 'azure cloud': 'azure'
+    }
+    normalized_skills = []
+    seen_skill = set()
+    for skill in found_skills:
+        key = skill.strip().lower()
+        key = skill_synonyms.get(key, key)
+        canonical = key.title()
+        if canonical.lower() not in seen_skill:
+            normalized_skills.append(canonical)
+            seen_skill.add(canonical.lower())
+    
+    resume_data["skills"] = normalized_skills  # Already deduped
     
     # Enhanced education extraction with multiple patterns
     education_list = []
