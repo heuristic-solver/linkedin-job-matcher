@@ -118,6 +118,7 @@ class StructuredResumeExtractor:
             re.compile(r'(?:Diploma|Certificate|Associate)\s+(?:in|of)?', re.IGNORECASE),
             re.compile(r'(?:BCA|MCA|BBA|MBA|B\.Com|M\.Com|BSc|MSc|B\.Pharm|M\.Pharm)', re.IGNORECASE),
             re.compile(r'\b(BE|ME|BTech|MTech|BSc|MSc|BEng|MEng|B\.E\.|M\.E\.)\b', re.IGNORECASE),
+            re.compile(r'(?:Bachelor\s+of\s+Technology|Bachelor\s+of\s+Engineering|B\s*Tech|B\s*E)', re.IGNORECASE),
         ]
         
         # Institution patterns
@@ -378,6 +379,11 @@ class StructuredResumeExtractor:
                         year_match = re.search(r'\b(19|20)\d{2}\b', ln)
                         if year_match:
                             edu.year = year_match.group(0)
+                        else:
+                            # Sometimes year appears earlier in the line
+                            early_year = re.search(r'(19|20)\d{2}', text)
+                            if early_year:
+                                edu.year = early_year.group(0)
                         key = (edu.degree.lower(), edu.institution.lower(), edu.year)
                         if key not in seen:
                             deduped.append(edu)
@@ -595,6 +601,33 @@ class StructuredResumeExtractor:
                     # Calculate duration based on extracted dates (no assumptions)
                     exp.duration_years = self._calculate_duration(exp.start_date, exp.end_date)
                     experience_list.append(exp)
+        
+        # Fallback: if nothing parsed, try global scan for date ranges
+        if not experience_list:
+            global_patterns = [
+                r'(\d{4})\s*[-–—]\s*(\d{4}|Present|Current|Now)',
+                r'(\d{1,2})[/-](\d{2,4})\s*[-–—]\s*(\d{1,2})?[/-]?(\d{2,4}|Present|Current|Now)?',
+                r'([A-Za-z]{3,9})\s+(\d{2,4})\s*[-–—]\s*([A-Za-z]{3,9})?\s*(\d{2,4}|Present|Current|Now)?'
+            ]
+            for gpat in global_patterns:
+                for m in re.finditer(gpat, text, re.IGNORECASE):
+                    g = m.groups()
+                    exp = ExperienceEntry()
+                    start_year = end_year = None
+                    start = g[0]
+                    if len(g) >= 2:
+                        end = g[1]
+                    else:
+                        end = ""
+                    exp.start_date = start
+                    exp.end_date = end or "Present"
+                    exp.duration_years = self._calculate_duration(exp.start_date, exp.end_date)
+                    if exp.duration_years > 0:
+                        experience_list.append(exp)
+                        if len(experience_list) >= 5:
+                            break
+                if experience_list:
+                    break
         
         return experience_list[:10]  # Limit to 10 entries
     
