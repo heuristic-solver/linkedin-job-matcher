@@ -244,10 +244,12 @@ async function handleResumeUpload() {
             }, 1500);
         } else {
             hideLoading();
+            hideProgressSection();
             showError(data.error || 'Upload failed. Please try again.');
         }
     } catch (error) {
         hideLoading();
+        hideProgressSection();
         showError('Network error. Please check your connection and try again.');
     }
 }
@@ -275,9 +277,13 @@ async function startResumeAnalysis() {
             }, 1500);
         } else {
             updateProgressStep('error', 0, data.error || 'Analysis failed.');
+            hideProgressSection();
+            showError(data.error || 'Analysis failed. Please re-upload your resume.');
         }
     } catch (error) {
         updateProgressStep('error', 0, 'Network error during analysis.');
+        hideProgressSection();
+        showError('Network error during analysis. Please try again.');
     }
 }
 
@@ -753,6 +759,10 @@ function showProgressSection() {
     if (progressCard) {
         progressCard.style.animation = 'pulse 2s ease-in-out infinite';
     }
+}
+
+function hideProgressSection() {
+    elements.progressSection.classList.add('hidden');
 }
 
 function showJobSearchSection() {

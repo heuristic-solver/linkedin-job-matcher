@@ -75,6 +75,10 @@ def upload_resume():
         if not os.path.exists(filepath):
             return jsonify({'error': 'File upload failed'}), 500
         
+        # Cache filepath for this session to avoid lookup issues later
+        progress_store[session_id] = progress_store.get(session_id, {})
+        progress_store[session_id]['filepath'] = filepath
+        
         return jsonify({
             'success': True,
             'session_id': session_id,
@@ -94,15 +98,20 @@ def analyze_resume_route(session_id):
         
         # Find uploaded file
         try:
-            files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.startswith(session_id)]
-            if not files:
+            filepath = None
+            cached = progress_store.get(session_id, {})
+            if cached and cached.get('filepath') and os.path.exists(cached['filepath']):
+                filepath = cached['filepath']
+            else:
+                files = [f for f in os.listdir(app.config['UPLOAD_FOLDER']) if f.startswith(session_id)]
+                if files:
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], files[0])
+            if not filepath or not os.path.exists(filepath):
                 progress_store[session_id] = {'step': 'error', 'progress': 0, 'message': 'Resume file not found. Please upload again.'}
-            return jsonify({'error': 'Resume file not found'}), 404
+                return jsonify({'error': 'Resume file not found'}), 404
         except Exception as e:
             progress_store[session_id] = {'step': 'error', 'progress': 0, 'message': f'Error accessing upload folder: {str(e)}'}
             return jsonify({'error': 'Error accessing upload folder'}), 500
-        
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], files[0])
         
         # Extract text
         progress_store[session_id] = {'step': 'extracting', 'progress': 30, 'message': 'Extracting text from resume...'}
