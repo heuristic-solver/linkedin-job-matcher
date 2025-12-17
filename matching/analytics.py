@@ -468,11 +468,12 @@ def _get_highest_education(education: List) -> str:
     
     edu_text = ' '.join(str(e).lower() for e in education)
     
+    # Prefer explicit BTech/BE before master's if present
     if any(word in edu_text for word in ['phd', 'doctorate', 'doctoral']):
         return "PhD"
     elif any(word in edu_text for word in ['master', 'mba', 'ms', 'm.sc', 'mtech', 'm.tech', 'm.e', 'mca']):
         return "Master's"
-    elif any(word in edu_text for word in ['bachelor', 'bs', 'b.sc', 'btech', 'b.tech', 'be', 'b.e', 'bca', 'bba']):
+    elif any(word in edu_text for word in ['btech', 'b.tech', 'be', 'b.e', 'bachelor', 'bs', 'b.sc', 'bca', 'bba', 'beng', 'b.eng']):
         return "Bachelor's"
     elif any(word in edu_text for word in ['diploma', 'certificate']):
         return "Diploma/Certificate"

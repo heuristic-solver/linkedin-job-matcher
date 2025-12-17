@@ -681,7 +681,7 @@ class StructuredResumeExtractor:
                     start_year = _norm_year(year_only.group(0))
                     start_month = 1  # Default to January if only year given
         
-        if not start_year:
+        if not start_year or start_year > current_year + 1:
             return 0.0
         
         # Parse end date
@@ -717,6 +717,15 @@ class StructuredResumeExtractor:
                             if norm_end:
                                 end_year = norm_end
                             end_month = 12  # Default to December if only year given
+        
+        # Cap end date to current if future
+        if end_year > current_year or (end_year == current_year and end_month > current_month):
+            end_year = current_year
+            end_month = current_month
+        
+        # If start is after end (future start), discard
+        if start_year > end_year or (start_year == end_year and start_month > end_month):
+            return 0.0
         
         # Calculate exact duration (no assumptions beyond defaults for missing month)
         start_total_months = start_year * 12 + start_month
