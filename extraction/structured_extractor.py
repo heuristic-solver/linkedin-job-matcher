@@ -117,6 +117,7 @@ class StructuredResumeExtractor:
             re.compile(r'(?:PhD|Ph\.D\.|Doctorate|Doctoral)\s+(?:in|of)?', re.IGNORECASE),
             re.compile(r'(?:Diploma|Certificate|Associate)\s+(?:in|of)?', re.IGNORECASE),
             re.compile(r'(?:BCA|MCA|BBA|MBA|B\.Com|M\.Com|BSc|MSc|B\.Pharm|M\.Pharm)', re.IGNORECASE),
+            re.compile(r'\b(BE|ME|BTech|MTech|BSc|MSc|BEng|MEng|B\.E\.|M\.E\.)\b', re.IGNORECASE),
         ]
         
         # Institution patterns
@@ -360,6 +361,28 @@ class StructuredResumeExtractor:
             if key not in seen:
                 deduped.append(edu)
                 seen.add(key)
+        
+        # If nothing found in explicit sections, do a fallback scan across entire text
+        if not deduped:
+            lines = [ln.strip() for ln in text.split('\n') if len(ln.strip()) > 6]
+            for ln in lines:
+                for pattern in self.degree_patterns:
+                    m = pattern.search(ln)
+                    if m:
+                        edu = EducationEntry()
+                        edu.degree = m.group(0).strip()
+                        # Try to capture institution heuristically (preceding or following capitalized tokens)
+                        inst_match = re.search(r'([A-Z][A-Za-z&\s]{3,}(University|College|Institute|School|IIT|NIT|IIM))', ln)
+                        if inst_match:
+                            edu.institution = inst_match.group(1).strip()
+                        year_match = re.search(r'\b(19|20)\d{2}\b', ln)
+                        if year_match:
+                            edu.year = year_match.group(0)
+                        key = (edu.degree.lower(), edu.institution.lower(), edu.year)
+                        if key not in seen:
+                            deduped.append(edu)
+                            seen.add(key)
+                        break
         
         return deduped[:5]  # Limit to 5 education entries
     
