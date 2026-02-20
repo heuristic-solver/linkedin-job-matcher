@@ -1,0 +1,23 @@
+# Railway Configuration File
+# This file is optional - Railway works great without it!
+# But it's useful for explicit configuration
+
+[build]
+builder = "NIXPACKS"
+# Railway auto-detects Python and requirements.txt
+
+[deploy]
+# Start command - uses gunicorn for production
+startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+
+# Health check endpoint
+healthcheckPath = "/health"
+healthcheckTimeout = 200
+
+# Restart policy
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Watch paths for changes (optional - for auto-redeploy)
+# watchPatterns = ["*.py", "*.html", "*.css", "*.js"]
+

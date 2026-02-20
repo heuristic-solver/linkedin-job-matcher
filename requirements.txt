@@ -1,0 +1,15 @@
+# Render-compatible requirements (no OCR dependencies)
+Flask==3.0.0
+gunicorn>=21.2.0
+google-generativeai>=0.3.0
+docx2txt>=0.8
+pdfplumber>=0.9.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+pandas>=2.0.0
+feedparser>=6.0.0
+Werkzeug>=3.0.0
+python-dotenv>=1.0.0
+
+# Structured extraction (production-ready)
+# No additional dependencies needed - uses built-in re, datetime, dataclasses
