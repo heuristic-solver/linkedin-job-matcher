@@ -1,0 +1,56 @@
+# Environment variables - NEVER commit this file
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Uploaded resumes (may contain personal data)
+uploads/
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+full_resume_text.txt
+test_parsing.py
+test_ollama.py
+reproduce_issue.py
+test_job_matcher_explanations_*.webp
+verify_unique_explanations_*.webp
+
+# Extra local files
+*.txt
+*.pid
+server.pid
+traceback.txt
+output.txt
+output2.txt
+tuple_search.txt
+
+# Artifacts/Agents
+.agents/
+.gemini/

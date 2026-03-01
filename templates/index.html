@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Matcher | Smart Job Matching Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Tailwind CDN for rapid UI iteration (loaded after site CSS so Tailwind utilities win) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-brain"></i>
+                <span>AI Resume Matcher</span>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <div class="nav-item">
+                    <a href="#home" class="nav-link active">Home</a>
+                </div>
+                <div class="nav-item dropdown">
+                    <a href="#features" class="nav-link">Features</a>
+                    <div class="dropdown-content">
+                        <a href="#ai-analysis">AI Analysis</a>
+                        <a href="#job-matching">Job Matching</a>
+                        <a href="#insights">Career Insights</a>
+                    </div>
+                </div>
+                <div class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </div>
+                <div class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </div>
+            </div>
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Find Your Perfect Job Match with 
+                            <span class="gradient-text">AI Intelligence</span>
+                        </h1>
+                        <p class="hero-description">
+                            Upload your resume and let our advanced AI analyze your skills, 
+                            experience, and qualifications to find the most compatible job opportunities.
+                        </p>
+                    </div>
+                    <div class="hero-upload">
+                        <div class="upload-card">
+                            <div class="upload-header">
+                                <h3>Get Started</h3>
+                                <p>Upload your resume to begin</p>
+                            </div>
+                            <div class="upload-area" id="upload-area">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">
+                                    <p class="upload-title">Drop your resume here</p>
+                                    <p class="upload-subtitle">or <span class="upload-browse">browse files</span></p>
+                                    <p class="upload-formats">PDF, DOCX, or Image files</p>
+                                </div>
+                                <input type="file" id="resume-file" accept=".pdf,.docx,.jpg,.jpeg,.png,.tiff,.bmp" style="display: none;">
+                            </div>
+                            <button class="upload-btn" id="upload-btn" disabled>
+                                <i class="fas fa-rocket"></i>
+                                Analyze Resume
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section id="progress-section" class="progress-section hidden">
+            <div class="container">
+                <div class="progress-card">
+                    <div class="progress-header">
+                        <h3 id="progress-title">Processing Your Resume</h3>
+                        <p id="progress-description">Please wait while we analyze your resume and find matching jobs...</p>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="step" id="step-upload">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Upload</span>
+                        </div>
+                        <div class="step" id="step-analyze">
+                            <i class="fas fa-brain"></i>
+                            <span>Analyze</span>
+                        </div>
+                        <div class="step" id="step-search">
+                            <i class="fas fa-search"></i>
+                            <span>Search Jobs</span>
+                        </div>
+                        <div class="step" id="step-match">
+                            <i class="fas fa-bullseye"></i>
+                            <span>Match</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resume Analytics Section -->
+        <section id="analytics-section" class="analytics-section hidden bg-slate-50 py-12">
+            <div class="container">
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm px-6 py-6 md:px-8 md:py-8 flex flex-col items-start md:items-center text-left md:text-center gap-4">
+                    <div class="space-y-2">
+                        <h2 class="text-3xl font-semibold text-slate-900">Resume Analytics Dashboard</h2>
+                        <p class="text-slate-600">Comprehensive analysis of your resume strength and key metrics</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 justify-start md:justify-center w-full">
+                        <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 text-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-slate-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900" id="ats-check-btn">
+                            <i class="fas fa-clipboard-check"></i>
+                            Check ATS Score
+                        </button>
+                        <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-white text-slate-700 px-4 py-2 text-sm font-semibold border border-slate-200 shadow-sm hover:-translate-y-0.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900" id="parsed-toggle-btn">
+                            <i class="fas fa-eye"></i>
+                            View Parsed Resume
+                        </button>
+                    </div>
+                </div>
+                <div class="analytics-grid grid gap-6 md:grid-cols-2 xl:grid-cols-3 mt-8" id="analytics-grid">
+                    <!-- Analytics cards will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Job Search Section -->
+        <section id="job-search-section" class="job-search-section hidden">
+            <div class="container">
+                <div class="search-card">
+                    <div class="search-header">
+                        <h3>Customize Your Job Search</h3>
+                        <p>Fine-tune your search parameters for better matches</p>
+                    </div>
+                    <div class="search-form">
+                        <div class="form-row">
+                        <div class="form-group">
+                            <label for="job-query">Job Role/Keywords</label>
+                            <input type="text" id="job-query" placeholder="e.g., AI Engineer, Data Scientist" value="AI Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" placeholder="e.g., India, Remote" value="India">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="job-type">Job Type</label>
+                                <select id="job-type">
+                                    <option value="all">All Types</option>
+                                    <option value="full-time">Full-time</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="contract">Contract</option>
+                                    <option value="remote">Remote</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="experience-level">Experience Level</label>
+                                <select id="experience-level">
+                                    <option value="all">All Levels</option>
+                                    <option value="entry">Entry Level</option>
+                                    <option value="mid">Mid Level</option>
+                                    <option value="senior">Senior Level</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="search-btn" id="search-btn">
+                            <i class="fas fa-search"></i>
+                            Find Matching Jobs
+                        </button>
+                        <button class="search-btn btn-secondary" id="advanced-search-btn" style="margin-top: 1rem;">
+                            <i class="fas fa-chart-line"></i>
+                            View Market Intelligence
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Intelligence Section -->
+        <section id="market-intel-section" class="market-intel-section hidden">
+            <div class="container">
+                <div class="intel-header">
+                    <h2>Market Intelligence</h2>
+                    <p>Real-time insights about the job market</p>
+                </div>
+                <div class="intel-grid" id="intel-grid">
+                    <!-- Market intelligence cards will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="results-section hidden bg-slate-50 py-12">
+            <div class="container">
+                <div class="results-header mb-6">
+                    <h2 class="text-2xl font-semibold text-slate-900">Your Job Matches</h2>
+                    <p class="text-slate-600 mt-1">Based on your resume analysis, here are the top opportunities for you</p>
+                </div>
+                <div class="results-filters flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <div class="filter-group flex flex-wrap gap-2">
+                        <button class="filter-btn active px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-slate-100 border-slate-200 hover:-translate-y-0.5 transition" data-filter="all">All Jobs</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-white border-slate-200 hover:-translate-y-0.5 transition" data-filter="high">High Match (80%+)</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-white border-slate-200 hover:-translate-y-0.5 transition" data-filter="medium">Medium Match (60-79%)</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg border text-sm font-medium text-slate-700 bg-white border-slate-200 hover:-translate-y-0.5 transition" data-filter="low">Lower Match (&lt;60%)</button>
+                    </div>
+                    <div class="sort-group flex items-center gap-2">
+                        <select id="platform-select" class="px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 bg-white">
+                            <option value="all">All Platforms</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="ATS">ATS</option>
+                            <option value="Indeed">Indeed</option>
+                            <option value="Naukri">Naukri</option>
+                            <option value="Glassdoor">Glassdoor</option>
+                            <option value="Monster">Monster</option>
+                            <option value="ZipRecruiter">ZipRecruiter</option>
+                        </select>
+                        <select id="sort-select" class="px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 bg-white">
+                            <option value="score">Sort by Match Score</option>
+                            <option value="date">Sort by Date</option>
+                            <option value="company">Sort by Company</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="results-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3 mt-6" id="results-grid">
+                    <!-- Job cards will be populated here -->
+                </div>
+            </div>
+        </section>
+                <section id="resume-generator-section" class="bg-white py-12 hidden">
+            <div class="container max-w-6xl mx-auto px-6">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-2">Generate Tailored Resume</h2>
+                    <p class="text-slate-600">Create a customized resume optimized for this specific job</p>
+                </div>
+
+                <!-- Resume Generator Card -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
+                    <!-- Style Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-slate-700 mb-3">
+                            Choose Resume Style
+                        </label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3" id="style-options">
+                            <!-- Style cards will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Preview Button -->
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button 
+                            id="preview-resume-btn" 
+                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 text-white px-6 py-3 font-semibold shadow-sm hover:bg-slate-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-900"
+                        >
+                            <i class="fas fa-eye"></i>
+                            Preview Resume
+                        </button>
+                        <button 
+                            id="download-resume-btn" 
+                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white px-6 py-3 font-semibold shadow-sm hover:bg-emerald-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-600"
+                            disabled
+                        >
+                            <i class="fas fa-download"></i>
+                            Download as PDF
+                        </button>
+                    </div>
+                    <!-- AI Generation Info -->
+            <div id="ai-generation-info" class="mt-6 hidden">
+                 <div class="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-robot text-purple-600 text-2xl mt-1"></i>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-purple-900 mb-2">🤖 AI-Powered Resume Generation</h4>
+                            <p class="text-sm text-purple-800 mb-3">
+                                Gemini AI has analyzed your background and the job requirements to create a tailored resume with:
+                            </p>
+                            <ul class="text-sm text-purple-700 space-y-1 ml-4">
+                                <li>✨ Customized professional summary</li>
+                                <li>🎯 Prioritized skills matching job requirements</li>
+                                <li>📝 Achievement-focused experience descriptions</li>
+                                <li>🔑 ATS-optimized keywords from job posting</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tailored Content Preview -->
+            <div id="content-preview" class="mt-6 hidden">
+                 <h3 class="text-lg font-semibold text-slate-900 mb-4">AI-Generated Content Preview</h3>
+                
+                <!-- Professional Summary -->
+                <div class="bg-white border border-slate-200 rounded-lg p-4 mb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-user-tie text-slate-600"></i>
+                        <h4 class="font-semibold text-slate-800">Professional Summary</h4>
+                    </div>
+                    <p id="preview-summary" class="text-sm text-slate-700 italic"></p>
+                </div>
+            </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal hidden" id="success-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h3>Success!</h3>
+            </div>
+            <div class="modal-body">
+                <p id="success-message">Resume uploaded successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="close-success">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal hidden" id="error-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-triangle error-icon"></i>
+                <h3>Error</h3>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">An error occurred. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="close-error">OK</button>
+            </div>
+        </div>
+    </div>
+
+        <div id="resume-preview-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <h3 class="text-xl font-semibold text-slate-900">Resume Preview</h3>
+                <button id="close-preview-btn" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-auto p-6">
+                <div id="resume-preview-content" class="bg-white">
+                    <!-- Resume HTML will be inserted here -->
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="border-t border-slate-200 px-6 py-4 flex justify-end gap-3">
+                <button id="modal-download-btn" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 text-white px-4 py-2 font-semibold hover:bg-emerald-700 transition">
+                    <i class="fas fa-download"></i>
+                    Download PDF
+                </button>
+                <button id="modal-close-btn" class="inline-flex items-center gap-2 rounded-lg bg-slate-200 text-slate-700 px-4 py-2 font-semibold hover:bg-slate-300 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

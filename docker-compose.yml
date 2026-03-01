@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Python Flask Application
+  app:
+    build: .
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+      - OLLAMA_API_URL=http://ollama:11434/api/generate
+      - OLLAMA_MODEL=gemma3:12b
+      - FLASK_SECRET_KEY=dev-secret-key-change-this
+      # If you have Gemini API Key, uncomment below
+      # - GOOGLE_AI_API_KEY=your_gemini_api_key
+    depends_on:
+      - ollama
+    volumes:
+      - ./uploads:/app/uploads
+
+  # Ollama Local LLM Server
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # If you have NVIDIA GPU support, uncomment below
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+    # One-time sidecar to pull the gemma model automatically
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    entrypoint: /bin/sh
+    command: -c "sleep 5; ollama pull gemma3:12b"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
