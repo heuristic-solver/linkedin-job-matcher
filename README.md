@@ -2,7 +2,7 @@
 Access it here - https://linkedin-job-matcher-2.onrender.com/
 A sleek, minimalist web application that uses AI to match resumes with relevant job opportunities. Built with Flask backend and modern frontend design principles.
 
-## ✨ Features
+##  Features
 
 ### 🎯 **Core Functionality**
 - **AI-Powered Resume Analysis**: Extract and analyze resume content using Google's Gemini AI
@@ -10,19 +10,19 @@ A sleek, minimalist web application that uses AI to match resumes with relevant 
 - **Compatibility Scoring**: Get detailed match scores (0-100%) with explanations
 - **Career Insights**: Receive AI-generated improvement recommendations
 
-### 🎨 **Design Philosophy**
+###  **Design Philosophy**
 - **Minimalist Interface**: Extensive white space and clean layouts
 - **Dynamic UX**: Smooth animations and micro-interactions
 - **Responsive Design**: Mobile-first approach with seamless cross-device experience
 - **Intuitive Navigation**: Consistent navigation with hover effects and blurred backgrounds
 
-### 💡 **Technical Highlights**
+###  **Technical Highlights**
 - **File Support**: PDF, DOCX, and image files (with OCR)
 - **Real-time Progress**: Live updates during processing
 - **Background Processing**: Non-blocking job search and analysis
 - **Performance Optimized**: Lazy loading and efficient rendering
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Python 3.8+
@@ -94,7 +94,7 @@ A sleek, minimalist web application that uses AI to match resumes with relevant 
 - Sort by score, date, or company
 - Detailed insights for each position
 
-## 🎨 Design System
+##  Design System
 
 ### **Color Palette**
 - **Primary**: #007AFF (Apple Blue)
@@ -119,14 +119,14 @@ A sleek, minimalist web application that uses AI to match resumes with relevant 
 - **Forms**: Clean inputs with focus states
 - **Modals**: Blurred backgrounds, smooth transitions
 
-## 📱 Responsive Breakpoints
+##  Responsive Breakpoints
 
 - **Mobile**: < 480px
 - **Tablet**: 481px - 768px
 - **Desktop**: 769px - 1024px
 - **Large**: > 1024px
 
-## 🔧 API Endpoints
+##  API Endpoints
 
 - `GET /` - Main application page
 - `POST /upload` - Resume file upload
@@ -136,7 +136,7 @@ A sleek, minimalist web application that uses AI to match resumes with relevant 
 - `GET /results/<session_id>` - Final results
 - `GET /health` - Health check
 
-## 🛠️ Project Structure
+##  Project Structure
 
 ```
 FYP/
@@ -153,14 +153,14 @@ FYP/
 └── uploads/              # Temporary file storage
 ```
 
-## 🔒 Security Notes
+##  Security Notes
 
 - **API Keys**: Store in environment variables for production
 - **File Upload**: Limited to 16MB, validated file types
 - **Session Management**: Unique session IDs for user data
 - **Data Privacy**: Files are processed locally
 
-## 🚀 Performance Features
+##  Performance Features
 
 - **Lazy Loading**: Images and content load on demand
 - **Debounced Inputs**: Reduced API calls
@@ -168,12 +168,12 @@ FYP/
 - **Optimized Assets**: Compressed CSS/JS
 - **Caching**: Browser caching for static assets
 
-## 🎯 Browser Support
+##  Browser Support
 
-- **Chrome**: 88+ ✅
-- **Firefox**: 85+ ✅
-- **Safari**: 14+ ✅
-- **Edge**: 88+ ✅
+- **Chrome**: 88+ 
+- **Firefox**: 85+ 
+- **Safari**: 14+ 
+- **Edge**: 88+ 
 
 ## 📊 Features Comparison
 
@@ -187,7 +187,7 @@ FYP/
 | Mobile Support | None | Fully Responsive |
 | User Experience | Basic | Premium |
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -195,10 +195,9 @@ FYP/
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License.
 
 ---
 
-**Built with ❤️ using Flask, Google AI, and modern web technologies**
