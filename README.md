@@ -4,7 +4,7 @@ A sleek, minimalist web application that uses AI to match resumes with relevant 
 
 ##  Features
 
-### 🎯 **Core Functionality**
+###  **Core Functionality**
 - **AI-Powered Resume Analysis**: Extract and analyze resume content using Google's Gemini AI
 - **Smart Job Matching**: Find relevant jobs from LinkedIn, Indeed, and CareerJet
 - **Compatibility Scoring**: Get detailed match scores (0-100%) with explanations
