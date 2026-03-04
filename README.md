@@ -67,7 +67,7 @@ A sleek, minimalist web application that uses AI to match resumes with relevant 
    http://localhost:5000
    ```
 
-## 🎯 How It Works
+##  How It Works
 
 ### 1. **Upload Resume**
 - Drag & drop or browse for your resume file
