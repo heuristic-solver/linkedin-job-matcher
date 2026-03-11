@@ -10,6 +10,7 @@ class OllamaResumeExtractor:
     def __init__(self, model: str = None):
         self.model = model or os.getenv('OLLAMA_MODEL', "gemma3:12b")
         self.api_url = os.getenv('OLLAMA_API_URL', "http://localhost:11434/api/generate")
+        self.api_key = os.getenv('OLLAMA_API_KEY')
 
     def extract_all(self, text: str) -> Dict:
         # Clean text of common PDF mangled characters
@@ -54,8 +55,13 @@ class OllamaResumeExtractor:
 
         try:
             print(f"[Ollama] Analyzing resume with {self.model} (this may take a minute)...")
+            headers = {}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+
             response = requests.post(
                 self.api_url,
+                headers=headers,
                 json={
                     "model": self.model,
                     "prompt": prompt,
